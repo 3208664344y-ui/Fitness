@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>健身容量日历</title>
+
+<!-- PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="健身日历">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='180' height='180' rx='36' fill='%234f46e5'/><text x='90' y='112' text-anchor='middle' font-size='100' font-family='sans-serif' fill='white'>🏋</text></svg>">
+<link rel="manifest" href="fitness-manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    user-select: none;
+  }
+  .app {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    height: fit-content;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .nav-btn {
+    width: 36px; height: 36px;
+    border: none; border-radius: 10px;
+    background: #f3f4f6; color: #374151;
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover { background: #e5e7eb; }
+
+  .today-btn {
+    font-size: 13px; font-weight: 600;
+    padding: 8px 16px; border: none;
+    border-radius: 10px;
+    background: #4f46e5; color: #fff;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .today-btn:hover { opacity: 0.9; }
+  .today-btn.plain {
+    background: #f3f4f6; color: #9ca3af;
+  }
+
+  .week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 20px; text-align: center;
+  }
+  .week-label { font-size: 12px; color: #999; }
+  .day-cell {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 15px; font-weight: 600;
+    color: #374151; background: #f9fafb;
+    position: relative; transition: all 0.15s;
+  }
+  .day-cell:hover { background: #eef2ff; }
+  .day-cell.today { color: #4f46e5; }
+  .day-cell.selected { background: #4f46e5; color: #fff; }
+  .day-cell.selected.today { color: #fff; }
+  .day-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%; background: #4f46e5;
+    position: absolute; bottom: 4px;
+  }
+  .day-cell.selected .day-dot { background: #fff; }
+
+  .date-info {
+    font-size: 14px; color: #6b7280;
+    margin-bottom: 16px; font-weight: 500;
+  }
+
+  .exercise-list { margin-bottom: 16px; }
+  .exercise-item {
+    padding: 14px;
+    background: #f9fafb; border-radius: 12px;
+    margin-bottom: 8px; transition: all 0.15s;
+  }
+  .ex-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .ex-name { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  .ex-volume {
+    font-size: 18px; font-weight: 700; color: #4f46e5; white-space: nowrap;
+  }
+  .ex-volume span { font-size: 12px; font-weight: 500; color: #9ca3af; }
+  .ex-sets { display: grid; gap: 3px; }
+  .ex-set-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: #6b7280; padding: 4px 8px;
+    background: #fff; border-radius: 6px;
+  }
+  .ex-set-row .set-tag {
+    font-size: 11px; color: #9ca3af; white-space: nowrap;
+  }
+  .ex-set-row .set-vol {
+    margin-left: auto; font-weight: 600; color: #4f46e5; white-space: nowrap;
+  }
+  .del-btn {
+    width: 28px; height: 28px;
+    border: none; border-radius: 8px;
+    background: #fef2f2; color: #ef4444;
+    font-size: 14px; cursor: pointer; flex-shrink: 0;
+  }
+  .del-btn:hover { background: #fee2e2; }
+  .edit-btn {
+    width: 28px; height: 28px;
+    border: none; border-radius: 8px;
+    background: #eef2ff; color: #4f46e5;
+    font-size: 14px; cursor: pointer; flex-shrink: 0;
+  }
+  .edit-btn:hover { background: #dde4ff; }
+
+  .empty-hint {
+    text-align: center; color: #d1d5db;
+    padding: 32px 0; font-size: 14px;
+  }
+
+  .day-summary {
+    font-size: 14px; color: #4f46e5; font-weight: 600;
+    margin-bottom: 12px; padding: 10px 14px;
+    background: #eef2ff; border-radius: 10px;
+    display: none;
+  }
+
+  .add-btn {
+    width: 100%; padding: 14px;
+    border: 2px dashed #d1d5db; border-radius: 14px;
+    background: #fff; color: #6b7280;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .add-btn:hover { border-color: #4f46e5; color: #4f46e5; background: #fafafe; }
+
+  /* 弹窗 */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    justify-content: center; align-items: flex-end;
+  }
+  .overlay.show { display: flex; }
+  .sheet {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px; width: 100%; max-width: 500px;
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .sheet h3 { font-size: 18px; margin-bottom: 20px; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label {
+    display: block; font-size: 13px; color: #6b7280;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px;
+    border: 1px solid #e5e7eb; border-radius: 10px;
+    font-size: 16px; font-family: inherit;
+    background: #f9fafb; outline: none;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: #4f46e5; background: #fff;
+  }
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+
+  /* 每组明细 */
+  .set-detail-list { margin-bottom: 12px; }
+  .set-detail-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 0; border-bottom: 1px solid #f3f4f6;
+  }
+  .set-detail-row .set-label {
+    font-size: 13px; color: #9ca3af; white-space: nowrap; min-width: 36px;
+  }
+  .set-detail-row input {
+    flex: 1; padding: 8px;
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    font-size: 14px; font-family: inherit; text-align: center;
+    background: #fff; outline: none; min-width: 0;
+  }
+  .set-detail-row input:focus { border-color: #4f46e5; }
+  .set-detail-row .set-row-vol {
+    font-size: 13px; font-weight: 600; color: #4f46e5; white-space: nowrap; min-width: 40px; text-align: right;
+  }
+  .copy-all {
+    font-size: 12px; color: #4f46e5; cursor: pointer;
+    padding: 4px 10px; border-radius: 6px; background: #eef2ff;
+    border: none; font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .copy-all:hover { background: #dde4ff; }
+
+  .set-count-ctrl {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .set-count-ctrl button {
+    width: 40px; height: 40px;
+    border: none; border-radius: 10px;
+    background: #f3f4f6; color: #374151;
+    font-size: 20px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .set-count-ctrl button:hover { background: #e5e7eb; }
+  .set-count-ctrl .count-num {
+    font-size: 22px; font-weight: 700; color: #1a1a1a; min-width: 30px; text-align: center;
+  }
+
+  .volume-preview {
+    text-align: center; padding: 14px;
+    background: #eef2ff; border-radius: 10px;
+    font-size: 15px; color: #4f46e5; font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .volume-preview b { font-size: 22px; }
+  .form-actions { display: flex; gap: 10px; }
+  .btn-submit, .btn-cancel {
+    flex: 1; padding: 14px; border: none;
+    border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .btn-submit { background: #4f46e5; color: #fff; }
+  .btn-submit:hover { opacity: 0.9; }
+  .btn-cancel { background: #f3f4f6; color: #374151; }
+  .btn-cancel:hover { background: #e5e7eb; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <button class="nav-btn" id="prevWeek">◀</button>
+    <h1 id="monthTitle"></h1>
+    <button class="today-btn" id="goToday">今天</button>
+    <button class="nav-btn" id="nextWeek">▶</button>
+  </div>
+
+  <div class="week-row" id="weekLabels">
+    <div class="week-label">一</div><div class="week-label">二</div>
+    <div class="week-label">三</div><div class="week-label">四</div>
+    <div class="week-label">五</div><div class="week-label">六</div>
+    <div class="week-label">日</div>
+  </div>
+  <div class="week-row" id="weekDays"></div>
+
+  <div class="date-info" id="dateInfo"></div>
+  <div class="day-summary" id="daySummary"></div>
+  <div class="exercise-list" id="exerciseList"></div>
+
+  <button class="add-btn" id="addBtn">＋ 添加训练</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h3 id="sheetTitle">添加训练</h3>
+    <div class="form-group">
+      <label>动作名称</label>
+      <select id="exSelect"><option value="">选择预设动作...</option></select>
+    </div>
+    <div class="form-group">
+      <label>或输入自定义动作</label>
+      <input type="text" id="exCustom" placeholder="输入动作名称">
+    </div>
+    <div class="form-group">
+      <label>组数</label>
+      <div class="set-count-ctrl">
+        <button id="setCountMinus">−</button>
+        <span class="count-num" id="setCountDisplay">3</span>
+        <button id="setCountPlus">+</button>
+      </div>
+    </div>
+    <div class="set-detail-list" id="setDetailList"></div>
+    <button class="copy-all" id="copyAll">⬇ 第一组数据应用到所有组</button>
+    <div class="volume-preview">总容量 = <b id="volPreview">0</b> kg</div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="cancelAdd">取消</button>
+      <button class="btn-submit" id="submitAdd">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// SW 离线缓存
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+const PRESETS = [
+  '卧推', '深蹲', '硬拉', '引体向上', '推举', '划船', '弯举',
+  '臂屈伸', '卷腹', '平板支撑', '飞鸟', '侧平举', '腿举',
+  '臀推', '高位下拉', '双杠臂屈伸', '俯身飞鸟', '面拉'
+];
+
+const presetSelect = document.getElementById('exSelect');
+PRESETS.forEach(p => {
+  const opt = document.createElement('option');
+  opt.value = p; opt.textContent = p;
+  presetSelect.appendChild(opt);
+});
+
+const today = new Date();
+let currentMonday = new Date(today);
+currentMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+let selectedDate = formatDate(today);
+
+let data = JSON.parse(localStorage.getItem('fitness_data')) || {};
+
+// 迁移旧数据：扁平结构 {sets,reps,weight} → 每组独立 {sets:[{reps,weight},...]}
+let migrated = false;
+Object.keys(data).forEach(date => {
+  data[date] = data[date].map(e => {
+    if (Array.isArray(e.sets)) return e;
+    migrated = true;
+    return {
+      id: e.id || genId(),
+      name: e.name,
+      sets: Array.from({ length: e.sets || 1 }, () => ({ reps: e.reps || 0, weight: e.weight || 0 })),
+      volume: e.volume || 0
+    };
+  });
+});
+if (migrated) save();
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function parseDate(str) { return new Date(str + 'T00:00:00'); }
+
+function getMonday(d) {
+  const m = new Date(d);
+  m.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return m;
+}
+
+function save() {
+  localStorage.setItem('fitness_data', JSON.stringify(data));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// === 渲染日历 ===
+function renderWeek() {
+  const monday = new Date(currentMonday);
+  const lastMonday = new Date(monday);
+  lastMonday.setDate(monday.getDate() + 6);
+  const m1 = monday.getMonth() + 1, m2 = lastMonday.getMonth() + 1;
+  const y1 = monday.getFullYear(), y2 = lastMonday.getFullYear();
+  document.getElementById('monthTitle').textContent =
+    m1 === m2 ? `${y1}年${m1}月` : `${y1}.${m1} — ${y2}.${m2}`;
+
+  const days = document.getElementById('weekDays');
+  days.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = formatDate(d);
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    cell.textContent = d.getDate();
+    cell.dataset.date = dateStr;
+
+    if (dateStr === formatDate(today)) cell.classList.add('today');
+    if (dateStr === selectedDate) cell.classList.add('selected');
+    if (data[dateStr] && data[dateStr].length > 0) {
+      const dot = document.createElement('div');
+      dot.className = 'day-dot';
+      cell.appendChild(dot);
+    }
+
+    cell.addEventListener('click', () => {
+      selectedDate = dateStr;
+      renderAll();
+    });
+    days.appendChild(cell);
+  }
+
+  // 今天按钮高亮控制
+  const todayBtn = document.getElementById('goToday');
+  if (selectedDate === formatDate(today)) {
+    todayBtn.classList.remove('plain');
+  } else {
+    todayBtn.classList.add('plain');
+  }
+}
+
+// === 渲染训练列表 ===
+function renderList() {
+  document.getElementById('dateInfo').textContent = selectedDate;
+  const list = document.getElementById('exerciseList');
+  const summary = document.getElementById('daySummary');
+  const exercises = data[selectedDate] || [];
+
+  if (exercises.length === 0) {
+    list.innerHTML = '<div class="empty-hint">暂无训练记录</div>';
+    summary.style.display = 'none';
+    return;
+  }
+
+  const totalVolume = exercises.reduce((s, e) => s + e.volume, 0);
+  summary.style.display = 'block';
+  summary.textContent = `今日总容量：${totalVolume.toLocaleString()} kg`;
+
+  list.innerHTML = exercises.map(e => {
+    const setsHtml = e.sets.map((set, i) => {
+      const setVol = set.reps * set.weight;
+      return `
+        <div class="ex-set-row">
+          <span class="set-tag">第${i + 1}组</span>
+          <span>${set.reps} 次 × ${set.weight} kg</span>
+          <span class="set-vol">${setVol.toLocaleString()} kg</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="exercise-item">
+        <div class="ex-header">
+          <div class="ex-name">${escapeHtml(e.name)}</div>
+          <div class="ex-volume">${e.volume.toLocaleString()}<br><span>kg</span></div>
+          <button class="edit-btn" data-id="${e.id}">✎</button>
+          <button class="del-btn" data-id="${e.id}">×</button>
+        </div>
+        <div class="ex-sets">${setsHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const entry = (data[selectedDate] || []).find(e => e.id === btn.dataset.id);
+      if (entry) openEditForm(entry);
+    });
+  });
+
+  list.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!confirm('删除这条记录？')) return;
+      data[selectedDate] = (data[selectedDate] || []).filter(e => e.id !== btn.dataset.id);
+      if (data[selectedDate].length === 0) delete data[selectedDate];
+      save();
+      renderAll();
+    });
+  });
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderAll() { renderWeek(); renderList(); }
+
+// === 弹窗：组明细 ===
+const overlay = document.getElementById('overlay');
+const setDetailList = document.getElementById('setDetailList');
+const setCountDisplay = document.getElementById('setCountDisplay');
+const volPreview = document.getElementById('volPreview');
+const customInput = document.getElementById('exCustom');
+const sel = document.getElementById('exSelect');
+const sheetTitle = document.getElementById('sheetTitle');
+const submitBtn = document.getElementById('submitAdd');
+let currentSetCount = 3;
+let editingId = null; // 编辑模式下的条目 id
+
+function addSetRow(i, reps, weight) {
+  const row = document.createElement('div');
+  row.className = 'set-detail-row';
+  row.innerHTML = `
+    <span class="set-label">第${i + 1}组</span>
+    <input type="number" class="set-reps" min="0" value="${reps}" placeholder="次">
+    <span style="font-size:13px;color:#9ca3af;">次 ×</span>
+    <input type="number" class="set-weight" min="0" value="${weight}" step="0.5" placeholder="kg">
+    <span style="font-size:13px;color:#9ca3af;">kg</span>
+    <span class="set-row-vol">${(reps * weight).toLocaleString()} kg</span>
+  `;
+  setDetailList.appendChild(row);
+  row.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      updateRowVol(row);
+      updateTotalVol();
+    });
+  });
+}
+
+function setSetCount(n) {
+  n = Math.max(1, Math.min(20, n));
+  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  const oldValues = [];
+  rows.forEach(row => {
+    oldValues.push({
+      reps: parseInt(row.querySelector('.set-reps').value) || 0,
+      weight: parseFloat(row.querySelector('.set-weight').value) || 0
+    });
+  });
+
+  setDetailList.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const r = oldValues[i] || { reps: 10, weight: 0 };
+    addSetRow(i, r.reps, r.weight);
+  }
+  currentSetCount = n;
+  setCountDisplay.textContent = n;
+  updateTotalVol();
+}
+
+function updateRowVol(row) {
+  const reps = parseInt(row.querySelector('.set-reps').value) || 0;
+  const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
+  row.querySelector('.set-row-vol').textContent = (reps * weight).toLocaleString() + ' kg';
+}
+
+function updateTotalVol() {
+  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  let total = 0;
+  rows.forEach(row => {
+    const reps = parseInt(row.querySelector('.set-reps').value) || 0;
+    const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
+    total += reps * weight;
+  });
+  volPreview.textContent = total.toLocaleString();
+}
+
+// +/- 组数
+document.getElementById('setCountMinus').addEventListener('click', () => {
+  if (currentSetCount > 1) setSetCount(currentSetCount - 1);
+});
+document.getElementById('setCountPlus').addEventListener('click', () => {
+  if (currentSetCount < 20) setSetCount(currentSetCount + 1);
+});
+
+// 复制第一组到所有
+document.getElementById('copyAll').addEventListener('click', () => {
+  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  if (rows.length < 2) return;
+  const firstReps = rows[0].querySelector('.set-reps').value;
+  const firstWeight = rows[0].querySelector('.set-weight').value;
+  rows.forEach((row, i) => {
+    if (i === 0) return;
+    row.querySelector('.set-reps').value = firstReps;
+    row.querySelector('.set-weight').value = firstWeight;
+    updateRowVol(row);
+  });
+  updateTotalVol();
+});
+
+// 打开弹窗 — 新增
+function openAddForm() {
+  editingId = null;
+  sheetTitle.textContent = '添加训练';
+  submitBtn.textContent = '确认添加';
+  sel.value = '';
+  customInput.value = '';
+  setSetCount(3);
+  overlay.classList.add('show');
+}
+
+// 打开弹窗 — 编辑
+function openEditForm(entry) {
+  editingId = entry.id;
+  sheetTitle.textContent = '编辑训练';
+  submitBtn.textContent = '确认修改';
+  if (PRESETS.includes(entry.name)) {
+    sel.value = entry.name;
+    customInput.value = '';
+  } else {
+    sel.value = '';
+    customInput.value = entry.name;
+  }
+  setDetailList.innerHTML = '';
+  entry.sets.forEach((set, i) => {
+    addSetRow(i, set.reps, set.weight);
+  });
+  currentSetCount = entry.sets.length;
+  setCountDisplay.textContent = currentSetCount;
+  updateTotalVol();
+  overlay.classList.add('show');
+}
+
+document.getElementById('addBtn').addEventListener('click', openAddForm);
+
+document.getElementById('cancelAdd').addEventListener('click', () => {
+  overlay.classList.remove('show');
+});
+
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) overlay.classList.remove('show');
+});
+
+customInput.addEventListener('input', () => { if (customInput.value) sel.value = ''; });
+sel.addEventListener('change', () => { if (sel.value) customInput.value = ''; });
+
+// 提交
+document.getElementById('submitAdd').addEventListener('click', () => {
+  let name = sel.value || customInput.value.trim();
+  if (!name) { alert('请选择或输入动作名称'); return; }
+
+  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  const sets = [];
+  rows.forEach(row => {
+    const reps = parseInt(row.querySelector('.set-reps').value) || 0;
+    const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
+    if (reps > 0 || weight > 0) sets.push({ reps, weight });
+  });
+
+  if (sets.length === 0) { alert('请至少填写一组的次数'); return; }
+
+  const volume = sets.reduce((s, set) => s + set.reps * set.weight, 0);
+  const entry = { id: editingId || genId(), name, sets, volume };
+
+  if (!data[selectedDate]) data[selectedDate] = [];
+
+  if (editingId) {
+    const idx = data[selectedDate].findIndex(e => e.id === editingId);
+    if (idx >= 0) data[selectedDate][idx] = entry;
+  } else {
+    data[selectedDate].push(entry);
+  }
+
+  save();
+  overlay.classList.remove('show');
+  renderAll();
+});
+
+// === 周导航 ===
+document.getElementById('prevWeek').addEventListener('click', () => {
+  currentMonday.setDate(currentMonday.getDate() - 7);
+  renderAll();
+});
+
+document.getElementById('nextWeek').addEventListener('click', () => {
+  currentMonday.setDate(currentMonday.getDate() + 7);
+  renderAll();
+});
+
+document.getElementById('goToday').addEventListener('click', () => {
+  currentMonday = new Date(today);
+  currentMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  selectedDate = formatDate(today);
+  renderAll();
+});
+
+// === 键盘导航 ===
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const d = parseDate(selectedDate);
+    d.setDate(d.getDate() - 1);
+    selectedDate = formatDate(d);
+    if (getMonday(parseDate(selectedDate)).getTime() !== getMonday(currentMonday).getTime()) {
+      currentMonday = getMonday(parseDate(selectedDate));
+    }
+    renderAll();
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    const d = parseDate(selectedDate);
+    d.setDate(d.getDate() + 1);
+    selectedDate = formatDate(d);
+    if (getMonday(parseDate(selectedDate)).getTime() !== getMonday(currentMonday).getTime()) {
+      currentMonday = getMonday(parseDate(selectedDate));
+    }
+    renderAll();
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>
