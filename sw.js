@@ -1,7 +1,7 @@
 const CACHE = 'fitness-v1';
 const ASSETS = [
-  '/fitness.html',
-  '/fitness-manifest.json'
+  '/Fitness/fitness.html',
+  '/Fitness/fitness-manifest.json'
 ];
 
 self.addEventListener('install', e => {
