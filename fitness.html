@@ -423,8 +423,41 @@
         <button id="setCountPlus">+</button>
       </div>
     </div>
-    <div class="set-detail-list" id="setDetailList"></div>
-    <button class="copy-all" id="copyAll">⬇ 第一组数据应用到所有组</button>
+    <div id="setTableWrap">
+      <table class="set-table" id="setTable">
+        <thead>
+          <tr>
+            <th style="width:17%;text-align:left;">组</th>
+            <th style="width:20%;">上一次</th>
+            <th style="width:24%;">重量 (kg)</th>
+            <th style="width:22%;">次数</th>
+            <th style="width:10%;">✓</th>
+          </tr>
+        </thead>
+        <tbody id="setTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="kb-wrap" id="kbWrap">
+      <div class="kb-focus-hint" id="kbHint">正在输入：重量 (±0.25 kg)</div>
+      <div class="kb-grid" id="kbGrid">
+        <button class="kb-key" data-key="1">1</button>
+        <button class="kb-key" data-key="2">2</button>
+        <button class="kb-key" data-key="3">3</button>
+        <button class="kb-key fn" data-key="back">⌫</button>
+        <button class="kb-key" data-key="4">4</button>
+        <button class="kb-key" data-key="5">5</button>
+        <button class="kb-key" data-key="6">6</button>
+        <button class="kb-key adj" data-key="plus">+</button>
+        <button class="kb-key" data-key="7">7</button>
+        <button class="kb-key" data-key="8">8</button>
+        <button class="kb-key" data-key="9">9</button>
+        <button class="kb-key adj" data-key="minus">−</button>
+        <button class="kb-key fn" data-key="dot">.</button>
+        <button class="kb-key" data-key="0">0</button>
+        <button class="kb-key accent span2" data-key="confirm">确认</button>
+      </div>
+    </div>
     <div class="volume-preview">总容量 = <b id="volPreview">0</b> kg</div>
     <div class="form-actions">
       <button class="btn-cancel" id="cancelAdd">取消</button>
@@ -676,7 +709,7 @@ function renderAll() { renderWeek(); renderList(); }
 
 // === 弹窗：组明细 ===
 const overlay = document.getElementById('overlay');
-const setDetailList = document.getElementById('setDetailList');
+const setTableBody = document.getElementById('setTableBody');
 const setCountDisplay = document.getElementById('setCountDisplay');
 const volPreview = document.getElementById('volPreview');
 const customInput = document.getElementById('exCustom');
@@ -698,7 +731,7 @@ function addSetRow(i, reps, weight) {
     <span style="font-size:13px;color:#9ca3af;">kg</span>
     <span class="set-row-vol">${(reps * weight).toLocaleString()} kg</span>
   `;
-  setDetailList.appendChild(row);
+  setTableBody.appendChild(row);
   row.querySelectorAll('input').forEach(inp => {
     inp.addEventListener('input', () => {
       updateRowVol(row);
@@ -709,7 +742,7 @@ function addSetRow(i, reps, weight) {
 
 function setSetCount(n) {
   n = Math.max(1, Math.min(20, n));
-  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  const rows = setTableBody.querySelectorAll('.set-detail-row');
   const oldValues = [];
   rows.forEach(row => {
     oldValues.push({
@@ -718,7 +751,7 @@ function setSetCount(n) {
     });
   });
 
-  setDetailList.innerHTML = '';
+  setTableBody.innerHTML = '';
   for (let i = 0; i < n; i++) {
     const r = oldValues[i] || { reps: 10, weight: 0 };
     addSetRow(i, r.reps, r.weight);
@@ -735,7 +768,7 @@ function updateRowVol(row) {
 }
 
 function updateTotalVol() {
-  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  const rows = setTableBody.querySelectorAll('.set-detail-row');
   let total = 0;
   rows.forEach(row => {
     const reps = parseInt(row.querySelector('.set-reps').value) || 0;
@@ -755,7 +788,7 @@ document.getElementById('setCountPlus').addEventListener('click', () => {
 
 // 复制第一组到所有
 document.getElementById('copyAll').addEventListener('click', () => {
-  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  const rows = setTableBody.querySelectorAll('.set-detail-row');
   if (rows.length < 2) return;
   const firstReps = rows[0].querySelector('.set-reps').value;
   const firstWeight = rows[0].querySelector('.set-weight').value;
@@ -855,7 +888,7 @@ function openEditForm(entry) {
     document.getElementById('exCustom').value = entry.name;
   }
 
-  setDetailList.innerHTML = '';
+  setTableBody.innerHTML = '';
   entry.sets.forEach(function(set, i) {
     addSetRow(i, set.reps, set.weight);
   });
@@ -889,7 +922,7 @@ document.getElementById('submitAdd').addEventListener('click', () => {
   var name = document.getElementById('exCustom').value.trim() || selectedExercise;
   if (!name) { alert('请选择或输入动作名称'); return; }
 
-  const rows = setDetailList.querySelectorAll('.set-detail-row');
+  const rows = setTableBody.querySelectorAll('.set-detail-row');
   const sets = [];
   rows.forEach(row => {
     const reps = parseInt(row.querySelector('.set-reps').value) || 0;
