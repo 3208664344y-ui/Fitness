@@ -615,8 +615,8 @@ const sheetTitle = document.getElementById('sheetTitle');
 const submitBtn = document.getElementById('submitAdd');
 let currentSetCount = 3;
 let editingId = null; // 编辑模式下的条目 id
-let currentCategory = CATEGORY_KEYS[0];
-let selectedExercise = '';
+var currentCategory = CATEGORY_KEYS[0];
+var selectedExercise = '';
 
 function addSetRow(i, reps, weight) {
   const row = document.createElement('div');
