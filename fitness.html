@@ -593,6 +593,20 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+function getLastExerciseData(exerciseName, currentDate) {
+  var dates = Object.keys(data).filter(function(d) { return d !== currentDate; });
+  dates.sort(function(a, b) { return b.localeCompare(a); });
+  for (var i = 0; i < dates.length; i++) {
+    var entries = data[dates[i]] || [];
+    for (var j = 0; j < entries.length; j++) {
+      if (entries[j].name === exerciseName) {
+        return entries[j].sets;
+      }
+    }
+  }
+  return null;
+}
+
 // === 渲染日历 ===
 function renderWeek() {
   const monday = new Date(currentMonday);
