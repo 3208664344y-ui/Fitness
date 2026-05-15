@@ -611,11 +611,12 @@ const setDetailList = document.getElementById('setDetailList');
 const setCountDisplay = document.getElementById('setCountDisplay');
 const volPreview = document.getElementById('volPreview');
 const customInput = document.getElementById('exCustom');
-const sel = document.getElementById('exSelect');
 const sheetTitle = document.getElementById('sheetTitle');
 const submitBtn = document.getElementById('submitAdd');
 let currentSetCount = 3;
 let editingId = null; // 编辑模式下的条目 id
+let currentCategory = CATEGORY_KEYS[0];
+let selectedExercise = '';
 
 function addSetRow(i, reps, weight) {
   const row = document.createElement('div');
@@ -698,14 +699,65 @@ document.getElementById('copyAll').addEventListener('click', () => {
   updateTotalVol();
 });
 
+function renderCatTabs() {
+  var container = document.getElementById('catTabs');
+  container.innerHTML = CATEGORY_KEYS.map(function(cat) {
+    var cls = cat === currentCategory ? ' active' : '';
+    return '<span class="cat-tab' + cls + '" data-cat="' + cat + '">' + cat + '</span>';
+  }).join('') + '<span class="cat-tab" data-cat="__custom__">自定义</span>';
+
+  container.querySelectorAll('.cat-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      currentCategory = tab.dataset.cat;
+      selectedExercise = '';
+      document.getElementById('exCustom').value = '';
+      renderCatTabs();
+      renderExGrid();
+    });
+  });
+}
+
+function renderExGrid() {
+  var grid = document.getElementById('exGrid');
+  var customInput = document.getElementById('exCustom');
+
+  if (currentCategory === '__custom__') {
+    grid.style.display = 'none';
+    customInput.style.display = 'block';
+    customInput.placeholder = '输入自定义动作名称';
+    customInput.focus();
+    return;
+  }
+
+  grid.style.display = 'grid';
+  customInput.style.display = 'none';
+
+  var exercises = CATEGORIES[currentCategory] || [];
+  grid.innerHTML = exercises.map(function(name) {
+    var selClass = name === selectedExercise ? ' selected' : '';
+    return '<div class="ex-tile' + selClass + '" data-name="' + escapeHtml(name) + '">' + escapeHtml(name) + '</div>';
+  }).join('');
+
+  grid.querySelectorAll('.ex-tile').forEach(function(tile) {
+    tile.addEventListener('click', function() {
+      selectedExercise = tile.dataset.name;
+      document.getElementById('exCustom').value = selectedExercise;
+      renderExGrid();
+    });
+  });
+}
+
 // 打开弹窗 — 新增
 function openAddForm() {
   editingId = null;
   sheetTitle.textContent = '添加训练';
   submitBtn.textContent = '确认添加';
-  sel.value = '';
-  customInput.value = '';
+  currentCategory = CATEGORY_KEYS[0];
+  selectedExercise = '';
+  document.getElementById('exCustom').value = '';
   setSetCount(3);
+  renderCatTabs();
+  renderExGrid();
   overlay.classList.add('show');
 }
 
@@ -714,20 +766,35 @@ function openEditForm(entry) {
   editingId = entry.id;
   sheetTitle.textContent = '编辑训练';
   submitBtn.textContent = '确认修改';
-  if (PRESETS.includes(entry.name)) {
-    sel.value = entry.name;
-    customInput.value = '';
-  } else {
-    sel.value = '';
-    customInput.value = entry.name;
+
+  // 查找动作所属分类
+  var foundCat = null;
+  var catKeys = Object.keys(CATEGORIES);
+  for (var i = 0; i < catKeys.length; i++) {
+    if (CATEGORIES[catKeys[i]].indexOf(entry.name) >= 0) {
+      foundCat = catKeys[i];
+      break;
+    }
   }
+  if (foundCat) {
+    currentCategory = foundCat;
+    selectedExercise = entry.name;
+    document.getElementById('exCustom').value = '';
+  } else {
+    currentCategory = '__custom__';
+    selectedExercise = '';
+    document.getElementById('exCustom').value = entry.name;
+  }
+
   setDetailList.innerHTML = '';
-  entry.sets.forEach((set, i) => {
+  entry.sets.forEach(function(set, i) {
     addSetRow(i, set.reps, set.weight);
   });
   currentSetCount = entry.sets.length;
   setCountDisplay.textContent = currentSetCount;
   updateTotalVol();
+  renderCatTabs();
+  renderExGrid();
   overlay.classList.add('show');
 }
 
@@ -741,12 +808,16 @@ overlay.addEventListener('click', (e) => {
   if (e.target === overlay) overlay.classList.remove('show');
 });
 
-customInput.addEventListener('input', () => { if (customInput.value) sel.value = ''; });
-sel.addEventListener('change', () => { if (sel.value) customInput.value = ''; });
+customInput.addEventListener('input', function() {
+  if (customInput.value) {
+    selectedExercise = customInput.value;
+    renderExGrid();
+  }
+});
 
 // 提交
 document.getElementById('submitAdd').addEventListener('click', () => {
-  let name = sel.value || customInput.value.trim();
+  var name = document.getElementById('exCustom').value.trim() || selectedExercise;
   if (!name) { alert('请选择或输入动作名称'); return; }
 
   const rows = setDetailList.querySelectorAll('.set-detail-row');
@@ -765,7 +836,7 @@ document.getElementById('submitAdd').addEventListener('click', () => {
   if (!data[selectedDate]) data[selectedDate] = [];
 
   if (editingId) {
-    const idx = data[selectedDate].findIndex(e => e.id === editingId);
+    var idx = data[selectedDate].findIndex(e => e.id === editingId);
     if (idx >= 0) data[selectedDate][idx] = entry;
   } else {
     data[selectedDate].push(entry);
