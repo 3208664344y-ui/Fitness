@@ -390,18 +390,26 @@ if ('serviceWorker' in navigator) {
   }
 })();
 
-const PRESETS = [
-  '卧推', '深蹲', '硬拉', '引体向上', '推举', '划船', '弯举',
-  '臂屈伸', '卷腹', '平板支撑', '飞鸟', '侧平举', '腿举',
-  '臀推', '高位下拉', '双杠臂屈伸', '俯身飞鸟', '面拉'
-];
+const CATEGORIES = {
+  '胸':       ['卧推','上斜卧推','下斜卧推','哑铃飞鸟','绳索夹胸','双杠臂屈伸','俯卧撑','哑铃卧推'],
+  '背':       ['引体向上','划船','高位下拉','俯身飞鸟','面拉','单臂哑铃划船','硬拉','T杆划船'],
+  '腿':       ['深蹲','腿举','臀推','前蹲','保加利亚分腿蹲','腿弯举','腿屈伸','罗马尼亚硬拉'],
+  '二头':     ['弯举','锤式弯举','牧师凳弯举','集中弯举','上斜哑铃弯举'],
+  '三头':     ['臂屈伸','窄距卧推','绳索下压','法式弯举','俯身臂屈伸'],
+  '肩':       ['推举','侧平举','前平举','阿诺德推举','俯身侧平举'],
+  '核心':     ['卷腹','平板支撑','悬垂举腿','俄罗斯转体','死虫式'],
+  '热身':     ['开合跳','肩关节环绕','髋关节激活','跳绳'],
+  '拉伸':     ['股四头肌拉伸','腘绳肌拉伸','胸大肌拉伸','背阔肌拉伸','肩部拉伸','髋屈肌拉伸'],
+  '拳击':     ['空击训练','打靶','重沙袋','速度球'],
+  'CrossFit': ['药球翻站','波比跳','墙球','双摇跳绳','抓举'],
+  'HyperX':   ['雪橇推','雪橇拉','农夫行走','战绳','翻轮胎'],
+};
 
-const presetSelect = document.getElementById('exSelect');
-PRESETS.forEach(p => {
-  const opt = document.createElement('option');
-  opt.value = p; opt.textContent = p;
-  presetSelect.appendChild(opt);
-});
+// 兼容：从 CATEGORIES 扁平生成所有动作列表
+const PRESETS = [].concat(...Object.values(CATEGORIES));
+
+// 分类列表（保持顺序，用于标签栏渲染）
+const CATEGORY_KEYS = Object.keys(CATEGORIES);
 
 const today = new Date();
 let currentMonday = new Date(today);
