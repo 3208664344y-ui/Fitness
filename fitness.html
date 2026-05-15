@@ -244,6 +244,42 @@
     margin-bottom: 16px;
   }
   .volume-preview b { font-size: 22px; }
+
+  /* 分类标签栏 */
+  .cat-tabs {
+    display: flex; gap: 4px; overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    padding: 7px 14px; border-radius: 16px;
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+    background: #f3f4f6; color: #6b7280;
+    cursor: pointer; border: none;
+    transition: all 0.15s;
+  }
+  .cat-tab.active { background: #4f46e5; color: #fff; }
+
+  /* 动作网格 */
+  .ex-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; max-height: 200px; overflow-y: auto;
+    margin-bottom: 8px;
+  }
+  .ex-tile {
+    padding: 12px 10px; border-radius: 12px;
+    background: #f9fafb; font-size: 14px; font-weight: 600;
+    text-align: center; cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .ex-tile:hover { background: #eef2ff; }
+  .ex-tile.selected {
+    background: #4f46e5; color: #fff;
+    border-color: #4f46e5;
+  }
   .form-actions { display: flex; gap: 10px; }
   .btn-submit, .btn-cancel {
     flex: 1; padding: 14px; border: none;
