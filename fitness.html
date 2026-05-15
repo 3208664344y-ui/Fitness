@@ -375,9 +375,122 @@
   }
   .install-app button:hover { opacity: 0.92; }
   .install-app button[hidden] { display: none; }
+
+  /* 底部导航 */
+  .tab-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 500px; background: #fff;
+    border-top: 1px solid #f3f4f6; display: flex;
+    padding: 6px 0 env(safe-area-inset-bottom);
+    z-index: 50;
+  }
+  .tab-item {
+    flex: 1; text-align: center; padding: 8px 0;
+    font-size: 11px; font-weight: 600; color: #9ca3af;
+    cursor: pointer; border: none; background: none;
+    transition: color 0.15s;
+  }
+  .tab-item.active { color: #4f46e5; }
+  .tab-item .tab-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+  /* 训练视图容器 */
+  .training-view { display: none; }
+  .training-view.show { display: block; }
+  .calendar-view.show { display: block; }
+  .calendar-view.hide { display: none; }
+
+  /* 计划列表 */
+  .plan-card {
+    padding: 16px; background: #f9fafb; border-radius: 14px;
+    margin-bottom: 10px; cursor: pointer; transition: all 0.15s;
+  }
+  .plan-card:hover { background: #eef2ff; }
+  .plan-card h4 { font-size: 16px; margin-bottom: 4px; color: #1a1a1a; }
+  .plan-card .plan-meta { font-size: 12px; color: #9ca3af; }
+  .plan-card .plan-actions { margin-top: 8px; display: flex; gap: 8px; }
+  .plan-card .plan-actions button {
+    font-size: 12px; padding: 4px 12px; border-radius: 8px;
+    border: none; cursor: pointer; background: #f3f4f6; color: #6b7280;
+  }
+
+  /* 计划编辑 */
+  .plan-ex-list { margin: 12px 0; }
+  .plan-ex-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; background: #f9fafb; border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .plan-ex-item .ex-info { flex: 1; }
+  .plan-ex-item .ex-info .ex-name { font-size: 14px; font-weight: 600; }
+  .plan-ex-item .ex-info .ex-detail { font-size: 12px; color: #9ca3af; }
+  .plan-ex-item .order-btns { display: flex; flex-direction: column; gap: 2px; }
+  .plan-ex-item .order-btns button {
+    width: 24px; height: 20px; border: none; border-radius: 4px;
+    background: #f3f4f6; color: #6b7280; font-size: 11px; cursor: pointer;
+    line-height: 1;
+  }
+
+  /* 训练执行 */
+  .training-header {
+    background: #4f46e5; color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 600; border-radius: 0;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .training-header .th-title { font-size: 16px; }
+  .training-header .th-progress { font-size: 13px; opacity: 0.85; }
+  .ex-progress-dots {
+    display: flex; gap: 10px; justify-content: center;
+    padding: 16px 0; overflow-x: auto;
+  }
+  .ep-dot {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .ep-dot.done { background: #4f46e5; color: #fff; }
+  .ep-dot.current { background: #eef2ff; color: #4f46e5; border: 2px solid #4f46e5; }
+  .ep-dot.upcoming { background: #f3f4f6; color: #d1d5db; }
+
+  .current-ex-display { text-align: center; padding: 16px 0; }
+  .current-ex-display .ce-name { font-size: 28px; font-weight: 800; color: #1a1a1a; }
+  .current-ex-display .ce-set-info { font-size: 14px; color: #6b7280; margin-top: 6px; }
+
+  .training-input-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .training-big-input {
+    flex: 1; text-align: center; padding: 18px 12px;
+    background: #fff; border-radius: 14px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.15s;
+  }
+  .training-big-input.active { border-color: #4f46e5; }
+  .training-big-input .t-val { font-size: 36px; font-weight: 800; color: #1a1a1a; }
+  .training-big-input .t-lbl { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+  .set-type-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .st-btn {
+    padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer; background: #f3f4f6; color: #6b7280;
+  }
+  .st-btn.sel { background: #4f46e5; color: #fff; }
+
+  .training-actions { display: flex; gap: 10px; margin-bottom: 16px; }
+  .training-btn {
+    flex: 1; padding: 16px; border: none; border-radius: 14px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  .training-btn.primary { background: #4f46e5; color: #fff; }
+  .training-btn.ghost { background: #f3f4f6; color: #6b7280; }
+
+  .training-done-banner { text-align: center; padding: 40px 20px; }
+  .training-done-banner .td-icon { font-size: 64px; margin-bottom: 16px; }
+  .training-done-banner h3 { font-size: 22px; color: #1a1a1a; margin-bottom: 8px; }
+  .training-done-banner .td-stats { font-size: 14px; color: #6b7280; margin-bottom: 4px; }
+
+  body { padding-bottom: calc(20px + 60px + env(safe-area-inset-bottom)); }
 </style>
 </head>
 <body>
+<div id="calendarView" class="calendar-view show">
 <div class="app">
   <div class="header">
     <button class="nav-btn" id="prevWeek">◀</button>
@@ -403,6 +516,145 @@
   <div class="install-app" id="installApp" hidden>
     <p id="installAppText"></p>
     <button type="button" id="installAppBtn" hidden>安装为应用</button>
+  </div>
+</div>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-item active" data-tab="calendar">
+    <span class="tab-icon">📅</span>日历
+  </button>
+  <button class="tab-item" data-tab="training">
+    <span class="tab-icon">🏋</span>训练
+  </button>
+</div>
+
+<div class="training-view" id="trainingView">
+  <!-- 计划列表 -->
+  <div id="planListView" style="padding-bottom: 80px;">
+    <div class="header" style="padding: 16px 20px;">
+      <h1>训练计划</h1>
+      <button class="today-btn" id="newPlanBtn" style="font-size:13px;">＋ 新建</button>
+    </div>
+    <div id="planList" style="padding:0 20px;"></div>
+  </div>
+
+  <!-- 计划编辑 -->
+  <div id="planEditView" style="display:none; padding-bottom: 80px;">
+    <div class="header" style="padding: 16px 20px;">
+      <button class="nav-btn" id="planEditBack">◀</button>
+      <h1 id="planEditTitle">新建计划</h1>
+      <button class="today-btn" id="planEditSave">保存</button>
+    </div>
+    <div style="padding:0 20px;">
+      <div class="form-group">
+        <label>计划名称</label>
+        <input type="text" id="planNameInput" placeholder="例如：推胸日">
+      </div>
+      <label style="font-size:13px;color:#6b7280;font-weight:600;">动作列表</label>
+      <div class="plan-ex-list" id="planExList"></div>
+      <button class="add-btn" id="planAddExercise" style="margin-top:8px;">＋ 添加动作</button>
+    </div>
+  </div>
+
+  <!-- 训练执行 -->
+  <div id="trainingExecView" style="display:none; padding-bottom: 120px;">
+    <div class="training-header" id="trainingHeader">
+      <button style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;" id="trainingPause">⏸ 暂停</button>
+      <span class="th-title" id="trainingPlanName">推胸日</span>
+      <span class="th-progress" id="trainingProgress">1/4</span>
+    </div>
+    <div style="padding: 0 20px;">
+      <div class="ex-progress-dots" id="exProgressDots"></div>
+      <div class="current-ex-display">
+        <div class="ce-name" id="currentExName">卧推</div>
+        <div class="ce-set-info" id="currentSetInfo">第 1 组（共 4 组）· 目标 60kg × 8</div>
+      </div>
+      <div class="training-input-row">
+        <div class="training-big-input" id="trainingWeightCell" data-field="weight">
+          <div class="t-val" id="trainingWeightVal">60</div>
+          <div class="t-lbl">重量 kg</div>
+        </div>
+        <div class="training-big-input" id="trainingRepsCell" data-field="reps">
+          <div class="t-val" id="trainingRepsVal">8</div>
+          <div class="t-lbl">次数</div>
+        </div>
+      </div>
+      <div class="set-type-row">
+        <button class="st-btn sel" data-tt="normal">正式组</button>
+        <button class="st-btn" data-tt="warmup">热身组</button>
+        <button class="st-btn" data-tt="dropset">递减组</button>
+      </div>
+      <div class="training-actions">
+        <button class="training-btn ghost" id="trainingSkip">跳过</button>
+        <button class="training-btn primary" id="trainingComplete">完成本组 ✓</button>
+      </div>
+
+      <!-- 训练键盘 -->
+      <div class="kb-wrap" id="trainingKbWrap" style="display:none;">
+        <div class="kb-focus-hint" id="trainingKbHint">正在输入：重量 (±0.25 kg)</div>
+        <div class="kb-grid" id="trainingKbGrid">
+          <button class="kb-key" data-key="1">1</button>
+          <button class="kb-key" data-key="2">2</button>
+          <button class="kb-key" data-key="3">3</button>
+          <button class="kb-key fn" data-key="back">⌫</button>
+          <button class="kb-key" data-key="4">4</button>
+          <button class="kb-key" data-key="5">5</button>
+          <button class="kb-key" data-key="6">6</button>
+          <button class="kb-key adj" data-key="plus">+</button>
+          <button class="kb-key" data-key="7">7</button>
+          <button class="kb-key" data-key="8">8</button>
+          <button class="kb-key" data-key="9">9</button>
+          <button class="kb-key adj" data-key="minus">−</button>
+          <button class="kb-key fn" data-key="dot">.</button>
+          <button class="kb-key" data-key="0">0</button>
+          <button class="kb-key accent span2" data-key="confirm">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 训练完成 -->
+  <div id="trainingDoneView" style="display:none; padding-bottom: 80px;">
+    <div class="training-done-banner">
+      <div class="td-icon">🏋️</div>
+      <h3 id="donePlanName">推胸日 完成！</h3>
+      <div class="td-stats" id="doneStats"></div>
+    </div>
+    <button class="training-btn primary" id="doneBackToCalendar" style="width:calc(100% - 40px); margin:0 20px;">返回日历</button>
+  </div>
+</div>
+
+<div class="overlay" id="planExOverlay" style="z-index:200;">
+  <div class="sheet">
+    <h3>添加动作到计划</h3>
+    <div class="form-group">
+      <label>选择动作</label>
+      <div class="cat-tabs" id="planCatTabs"></div>
+      <div class="ex-grid" id="planExGrid"></div>
+    </div>
+    <div class="form-group">
+      <label>组数</label>
+      <div class="set-count-ctrl">
+        <button id="planSetMinus">−</button>
+        <span class="count-num" id="planSetCount">3</span>
+        <button id="planSetPlus">+</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>目标重量 (kg)</label>
+        <input type="number" id="planTargetWeight" value="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label>目标次数</label>
+        <input type="number" id="planTargetReps" value="10">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="planExCancel">取消</button>
+      <button class="btn-submit" id="planExConfirm">添加</button>
+    </div>
   </div>
 </div>
 
@@ -1089,6 +1341,10 @@ overlay.addEventListener('click', (e) => {
   if (e.target === overlay) overlay.classList.remove('show');
 });
 
+document.getElementById('planExOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+
 customInput.addEventListener('input', function() {
   if (customInput.value) {
     selectedExercise = customInput.value;
@@ -1172,6 +1428,528 @@ document.addEventListener('keydown', e => {
     renderAll();
   }
 });
+
+// === 训练计划数据层 ===
+var plans = JSON.parse(localStorage.getItem('fitness_plans')) || {};
+
+function savePlans() {
+  localStorage.setItem('fitness_plans', JSON.stringify(plans));
+}
+
+function createPlan(name, exercises) {
+  var id = 'plan_' + genId();
+  var today = formatDate(new Date());
+  plans[id] = {
+    id: id,
+    name: name,
+    exercises: exercises,
+    createdAt: today,
+    lastUsed: null
+  };
+  savePlans();
+  return id;
+}
+
+function updatePlan(id, name, exercises) {
+  if (plans[id]) {
+    plans[id].name = name;
+    plans[id].exercises = exercises;
+    savePlans();
+  }
+}
+
+function deletePlan(id) {
+  delete plans[id];
+  savePlans();
+}
+
+function getPlansList() {
+  return Object.values(plans).sort(function(a, b) {
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+}
+
+// === Tab 切换 ===
+document.querySelectorAll('.tab-item').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    var target = tab.dataset.tab;
+    if (target === 'calendar') {
+      document.getElementById('calendarView').classList.add('show');
+      document.getElementById('calendarView').classList.remove('hide');
+      document.getElementById('trainingView').classList.remove('show');
+    } else {
+      document.getElementById('calendarView').classList.add('hide');
+      document.getElementById('calendarView').classList.remove('show');
+      document.getElementById('trainingView').classList.add('show');
+      showPlanList();
+    }
+  });
+});
+
+// === 计划列表 ===
+function showPlanList() {
+  document.getElementById('planListView').style.display = 'block';
+  document.getElementById('planEditView').style.display = 'none';
+  document.getElementById('trainingExecView').style.display = 'none';
+  document.getElementById('trainingDoneView').style.display = 'none';
+
+  var list = document.getElementById('planList');
+  var all = getPlansList();
+  if (all.length === 0) {
+    list.innerHTML = '<div class="empty-hint">暂无训练计划<br><br>点击「＋ 新建」创建你的第一个计划</div>';
+    return;
+  }
+  list.innerHTML = all.map(function(p) {
+    var exCount = p.exercises.length;
+    var lastUsed = p.lastUsed || '从未使用';
+    return '<div class="plan-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start;">' +
+      '<div><h4>' + escapeHtml(p.name) + '</h4>' +
+      '<div class="plan-meta">' + exCount + '个动作 · 上次：' + lastUsed + '</div></div>' +
+      '<div class="plan-actions">' +
+      '<button data-action="edit" data-id="' + p.id + '">编辑</button>' +
+      '<button data-action="delete" data-id="' + p.id + '" style="color:#ef4444;">删除</button>' +
+      '</div></div></div>';
+  }).join('');
+
+  list.querySelectorAll('.plan-card').forEach(function(card, i) {
+    card.addEventListener('click', function(e) {
+      if (e.target.closest('button')) return;
+      startTraining(all[i].id);
+    });
+  });
+  list.querySelectorAll('[data-action="edit"]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openPlanEditor(btn.dataset.id);
+    });
+  });
+  list.querySelectorAll('[data-action="delete"]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (confirm('删除这个计划？')) {
+        deletePlan(btn.dataset.id);
+        showPlanList();
+      }
+    });
+  });
+}
+
+// === 计划编辑 ===
+var editingPlanId = null;
+
+function openPlanEditor(planId) {
+  editingPlanId = planId;
+  document.getElementById('planListView').style.display = 'none';
+  document.getElementById('planEditView').style.display = 'block';
+
+  if (planId) {
+    var plan = plans[planId];
+    document.getElementById('planEditTitle').textContent = '编辑计划';
+    document.getElementById('planNameInput').value = plan.name;
+    document.getElementById('planExList').dataset.exercises = JSON.stringify(plan.exercises);
+  } else {
+    document.getElementById('planEditTitle').textContent = '新建计划';
+    document.getElementById('planNameInput').value = '';
+    document.getElementById('planExList').dataset.exercises = '[]';
+  }
+  renderPlanExerciseList();
+}
+
+function getPlanExercises() {
+  try { return JSON.parse(document.getElementById('planExList').dataset.exercises || '[]'); }
+  catch(e) { return []; }
+}
+
+function setPlanExercises(exs) {
+  document.getElementById('planExList').dataset.exercises = JSON.stringify(exs);
+}
+
+function renderPlanExerciseList() {
+  var exs = getPlanExercises();
+  var container = document.getElementById('planExList');
+  if (exs.length === 0) {
+    container.innerHTML = '<div class="empty-hint">还没有添加动作</div>';
+    return;
+  }
+  container.innerHTML = exs.map(function(ex, i) {
+    return '<div class="plan-ex-item">' +
+      '<div class="order-btns">' +
+      '<button data-idx="' + i + '" data-dir="up">▲</button>' +
+      '<button data-idx="' + i + '" data-dir="down">▼</button>' +
+      '</div>' +
+      '<div class="ex-info">' +
+      '<div class="ex-name">' + escapeHtml(ex.name) + '</div>' +
+      '<div class="ex-detail">' + ex.sets + '组 · 目标 ' + ex.targetWeight + 'kg × ' + ex.targetReps + '次</div>' +
+      '</div>' +
+      '<button class="del-btn" data-idx="' + i + '">×</button>' +
+      '</div>';
+  }).join('');
+
+  container.querySelectorAll('[data-dir]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var idx = parseInt(btn.dataset.idx);
+      var dir = btn.dataset.dir;
+      var exs = getPlanExercises();
+      if (dir === 'up' && idx > 0) {
+        var tmp = exs[idx - 1]; exs[idx - 1] = exs[idx]; exs[idx] = tmp;
+      } else if (dir === 'down' && idx < exs.length - 1) {
+        var tmp = exs[idx + 1]; exs[idx + 1] = exs[idx]; exs[idx] = tmp;
+      }
+      setPlanExercises(exs);
+      renderPlanExerciseList();
+    });
+  });
+
+  container.querySelectorAll('.del-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var exs = getPlanExercises();
+      exs.splice(parseInt(btn.dataset.idx), 1);
+      setPlanExercises(exs);
+      renderPlanExerciseList();
+    });
+  });
+}
+
+document.getElementById('planEditSave').addEventListener('click', function() {
+  var name = document.getElementById('planNameInput').value.trim();
+  if (!name) { alert('请输入计划名称'); return; }
+  var exercises = getPlanExercises();
+  if (exercises.length === 0) { alert('请至少添加一个动作'); return; }
+
+  if (editingPlanId) {
+    updatePlan(editingPlanId, name, exercises);
+  } else {
+    createPlan(name, exercises);
+  }
+  showPlanList();
+});
+
+document.getElementById('planEditBack').addEventListener('click', function() {
+  showPlanList();
+});
+
+document.getElementById('newPlanBtn').addEventListener('click', function() {
+  openPlanEditor(null);
+});
+
+// === 训练执行 ===
+var trainingSession = null;
+
+function startTraining(planId) {
+  var plan = plans[planId];
+  if (!plan) return;
+  plan.lastUsed = formatDate(new Date());
+  savePlans();
+
+  trainingSession = {
+    planId: planId,
+    plan: plan,
+    currentExIndex: 0,
+    currentSetIndex: 0,
+    currentSetType: 'normal',
+    currentWeight: plan.exercises[0].targetWeight,
+    currentReps: plan.exercises[0].targetReps,
+    completedSets: [],
+    paused: false
+  };
+
+  document.getElementById('planListView').style.display = 'none';
+  document.getElementById('trainingExecView').style.display = 'block';
+  document.getElementById('trainingDoneView').style.display = 'none';
+
+  document.getElementById('trainingPlanName').textContent = plan.name;
+  updateTrainingUI();
+}
+
+function getCurrentExercise() {
+  if (!trainingSession) return null;
+  var exs = trainingSession.plan.exercises;
+  return exs[trainingSession.currentExIndex] || null;
+}
+
+function updateTrainingUI() {
+  var s = trainingSession;
+  var plan = s.plan;
+  var ex = getCurrentExercise();
+
+  var dotsHtml = '';
+  for (var i = 0; i < plan.exercises.length; i++) {
+    var cls = 'ep-dot ';
+    if (i < s.currentExIndex) cls += 'done';
+    else if (i === s.currentExIndex) cls += 'current';
+    else cls += 'upcoming';
+    dotsHtml += '<span class="' + cls + '">' + (i + 1) + '</span>';
+  }
+  document.getElementById('exProgressDots').innerHTML = dotsHtml;
+  document.getElementById('trainingProgress').textContent = (s.currentExIndex + 1) + '/' + plan.exercises.length;
+
+  if (ex) {
+    document.getElementById('currentExName').textContent = ex.name;
+    document.getElementById('currentSetInfo').textContent =
+      '第 ' + (s.currentSetIndex + 1) + ' 组（共 ' + ex.sets + ' 组）· 目标 ' + ex.targetWeight + 'kg × ' + ex.targetReps + '次';
+    document.getElementById('trainingWeightVal').textContent = s.currentWeight;
+    document.getElementById('trainingRepsVal').textContent = s.currentReps;
+  }
+
+  document.querySelectorAll('#trainingExecView .st-btn').forEach(function(btn) {
+    btn.classList.toggle('sel', btn.dataset.tt === s.currentSetType);
+  });
+}
+
+document.getElementById('trainingComplete').addEventListener('click', function() {
+  var s = trainingSession;
+  if (!s) return;
+  var ex = getCurrentExercise();
+  if (!ex) return;
+
+  s.completedSets.push({
+    exercise: ex.name,
+    setIndex: s.currentSetIndex,
+    reps: s.currentReps,
+    weight: s.currentWeight,
+    type: s.currentSetType
+  });
+
+  s.currentSetIndex++;
+  if (s.currentSetIndex >= ex.sets) {
+    s.currentSetIndex = 0;
+    s.currentExIndex++;
+
+    if (s.currentExIndex >= s.plan.exercises.length) {
+      finishTraining();
+      return;
+    }
+    var nextEx = getCurrentExercise();
+    s.currentWeight = nextEx.targetWeight;
+    s.currentReps = nextEx.targetReps;
+    s.currentSetType = 'normal';
+  }
+
+  updateTrainingUI();
+});
+
+document.getElementById('trainingSkip').addEventListener('click', function() {
+  var s = trainingSession;
+  if (!s) return;
+  var ex = getCurrentExercise();
+  if (!ex) return;
+
+  s.currentSetIndex++;
+  if (s.currentSetIndex >= ex.sets) {
+    s.currentSetIndex = 0;
+    s.currentExIndex++;
+    if (s.currentExIndex >= s.plan.exercises.length) {
+      finishTraining();
+      return;
+    }
+    var nextEx = getCurrentExercise();
+    s.currentWeight = nextEx.targetWeight;
+    s.currentReps = nextEx.targetReps;
+    s.currentSetType = 'normal';
+  }
+  updateTrainingUI();
+});
+
+function finishTraining() {
+  document.getElementById('trainingExecView').style.display = 'none';
+  document.getElementById('trainingDoneView').style.display = 'block';
+
+  var s = trainingSession;
+  var totalVolume = s.completedSets.reduce(function(sum, set) {
+    return sum + set.reps * set.weight;
+  }, 0);
+
+  document.getElementById('donePlanName').textContent = s.plan.name + ' 完成！';
+  document.getElementById('doneStats').innerHTML =
+    s.plan.exercises.length + '个动作 · ' + s.completedSets.length + '组完成 · 总容量 ' + totalVolume.toLocaleString() + ' kg<br>' +
+    '已保存到 ' + selectedDate;
+
+  saveCompletedSetsToCalendar();
+  trainingSession = null;
+}
+
+function saveCompletedSetsToCalendar() {
+  var s = trainingSession;
+  if (!s || s.completedSets.length === 0) return;
+
+  var byExercise = {};
+  s.completedSets.forEach(function(set) {
+    if (!byExercise[set.exercise]) byExercise[set.exercise] = [];
+    byExercise[set.exercise].push(set);
+  });
+
+  Object.keys(byExercise).forEach(function(exName) {
+    var sets = byExercise[exName].map(function(set) {
+      return {
+        reps: set.reps,
+        weight: set.weight,
+        type: set.type,
+        done: true
+      };
+    });
+    var volume = sets.reduce(function(sum, set) { return sum + set.reps * set.weight; }, 0);
+    var entry = { id: genId(), name: exName, sets: sets, volume: volume };
+
+    if (!data[selectedDate]) data[selectedDate] = [];
+    data[selectedDate].push(entry);
+  });
+  save();
+  renderAll();
+}
+
+document.getElementById('doneBackToCalendar').addEventListener('click', function() {
+  document.querySelector('.tab-item[data-tab="calendar"]').click();
+});
+
+// === 训练键盘 ===
+var trainingKbTarget = null;
+
+document.getElementById('trainingWeightCell').addEventListener('click', function() {
+  trainingKbTarget = 'weight';
+  document.getElementById('trainingWeightCell').classList.add('active');
+  document.getElementById('trainingRepsCell').classList.remove('active');
+  document.getElementById('trainingKbHint').textContent = '正在输入：重量 (步长 ±0.25 kg)';
+  document.getElementById('trainingKbWrap').style.display = 'block';
+});
+
+document.getElementById('trainingRepsCell').addEventListener('click', function() {
+  trainingKbTarget = 'reps';
+  document.getElementById('trainingRepsCell').classList.add('active');
+  document.getElementById('trainingWeightCell').classList.remove('active');
+  document.getElementById('trainingKbHint').textContent = '正在输入：次数 (步长 ±1 次)';
+  document.getElementById('trainingKbWrap').style.display = 'block';
+});
+
+document.getElementById('trainingKbGrid').addEventListener('click', function(e) {
+  var key = e.target.closest('.kb-key');
+  if (!key || !trainingKbTarget || !trainingSession) return;
+  var val = key.dataset.key;
+  var cur = trainingKbTarget === 'weight' ? trainingSession.currentWeight : trainingSession.currentReps;
+
+  if (val === 'back') {
+    var str = String(cur);
+    cur = str.length > 1 ? parseFloat(str.slice(0, -1)) || 0 : 0;
+  } else if (val === 'dot') {
+    if (trainingKbTarget === 'weight') {
+      var str = String(cur);
+      if (str.indexOf('.') < 0) cur = str + '.';
+    }
+  } else if (val === 'plus') {
+    var step = trainingKbTarget === 'weight' ? 0.25 : 1;
+    cur = trainingKbTarget === 'weight' ? Math.round((cur + step) * 100) / 100 : Math.round(cur + step);
+  } else if (val === 'minus') {
+    var step = trainingKbTarget === 'weight' ? 0.25 : 1;
+    cur = trainingKbTarget === 'weight' ? Math.round(Math.max(0, cur - step) * 100) / 100 : Math.max(0, Math.round(cur - step));
+  } else if (val === 'confirm') {
+    document.getElementById('trainingKbWrap').style.display = 'none';
+    document.getElementById('trainingWeightCell').classList.remove('active');
+    document.getElementById('trainingRepsCell').classList.remove('active');
+    trainingKbTarget = null;
+    return;
+  } else {
+    var str = String(cur);
+    if (str === '0' && val !== '0') str = '';
+    if (str === '' && val === '0') str = '0';
+    else str = str + val;
+    cur = parseFloat(str) || 0;
+  }
+
+  if (trainingKbTarget === 'weight') {
+    trainingSession.currentWeight = Math.round(cur * 100) / 100;
+    document.getElementById('trainingWeightVal').textContent = trainingSession.currentWeight;
+  } else {
+    trainingSession.currentReps = cur;
+    document.getElementById('trainingRepsVal').textContent = trainingSession.currentReps;
+  }
+});
+
+// === 训练组类型切换 ===
+document.querySelectorAll('#trainingExecView .st-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    if (!trainingSession) return;
+    trainingSession.currentSetType = btn.dataset.tt;
+    updateTrainingUI();
+  });
+});
+
+// === 暂停 ===
+document.getElementById('trainingPause').addEventListener('click', function() {
+  if (!trainingSession) return;
+  trainingSession.paused = !trainingSession.paused;
+  this.textContent = trainingSession.paused ? '▶ 继续' : '⏸ 暂停';
+});
+
+// === 计划动作选择器 ===
+var planExSelected = '';
+var planExCategory = CATEGORY_KEYS[0];
+var planSetNum = 3;
+
+document.getElementById('planAddExercise').addEventListener('click', function() {
+  planExSelected = '';
+  planExCategory = CATEGORY_KEYS[0];
+  planSetNum = 3;
+  document.getElementById('planSetCount').textContent = '3';
+  document.getElementById('planTargetWeight').value = '0';
+  document.getElementById('planTargetReps').value = '10';
+  renderPlanCatTabs();
+  renderPlanExGrid();
+  document.getElementById('planExOverlay').classList.add('show');
+});
+
+document.getElementById('planSetMinus').addEventListener('click', function() {
+  if (planSetNum > 1) { planSetNum--; document.getElementById('planSetCount').textContent = planSetNum; }
+});
+document.getElementById('planSetPlus').addEventListener('click', function() {
+  if (planSetNum < 20) { planSetNum++; document.getElementById('planSetCount').textContent = planSetNum; }
+});
+
+document.getElementById('planExConfirm').addEventListener('click', function() {
+  if (!planExSelected) { alert('请选择一个动作'); return; }
+  var w = parseFloat(document.getElementById('planTargetWeight').value) || 0;
+  var r = parseInt(document.getElementById('planTargetReps').value) || 0;
+  var exs = getPlanExercises();
+  exs.push({ name: planExSelected, sets: planSetNum, targetWeight: w, targetReps: r });
+  setPlanExercises(exs);
+  renderPlanExerciseList();
+  document.getElementById('planExOverlay').classList.remove('show');
+});
+
+document.getElementById('planExCancel').addEventListener('click', function() {
+  document.getElementById('planExOverlay').classList.remove('show');
+});
+
+function renderPlanCatTabs() {
+  var container = document.getElementById('planCatTabs');
+  container.innerHTML = CATEGORY_KEYS.map(function(cat) {
+    var cls = cat === planExCategory ? ' active' : '';
+    return '<span class="cat-tab' + cls + '" data-cat="' + cat + '">' + cat + '</span>';
+  }).join('');
+  container.querySelectorAll('.cat-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      planExCategory = tab.dataset.cat;
+      renderPlanCatTabs();
+      renderPlanExGrid();
+    });
+  });
+}
+
+function renderPlanExGrid() {
+  var grid = document.getElementById('planExGrid');
+  var exercises = CATEGORIES[planExCategory] || [];
+  grid.innerHTML = exercises.map(function(name) {
+    var selClass = name === planExSelected ? ' selected' : '';
+    return '<div class="ex-tile' + selClass + '" data-name="' + escapeHtml(name) + '">' + escapeHtml(name) + '</div>';
+  }).join('');
+  grid.querySelectorAll('.ex-tile').forEach(function(tile) {
+    tile.addEventListener('click', function() {
+      planExSelected = tile.dataset.name;
+      renderPlanExGrid();
+    });
+  });
+}
 
 renderAll();
 </script>
