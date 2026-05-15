@@ -944,16 +944,89 @@ function showTypePopup(tag) {
 }
 
 function openKeyboard(cell) {
-  // Task 6 will implement this
+  var si = parseInt(cell.dataset.set);
+  var field = cell.dataset.field;
+  kbTarget = { setIndex: si, field: field };
+
+  document.querySelectorAll('.num-cell.active').forEach(function(c) { c.classList.remove('active'); });
+  cell.classList.add('active');
+
+  var hint = document.getElementById('kbHint');
+  if (field === 'weight') {
+    hint.textContent = '正在输入：重量 (步长 ±0.25 kg)';
+  } else {
+    hint.textContent = '正在输入：次数 (步长 ±1 次)';
+  }
+
+  document.getElementById('kbWrap').classList.add('show');
 }
 
 function closeKeyboard() {
-  // Task 6 will implement this
+  document.getElementById('kbWrap').classList.remove('show');
+  document.querySelectorAll('.num-cell.active').forEach(function(c) { c.classList.remove('active'); });
+  kbTarget = null;
 }
 
 function handleKBInput(value) {
-  // Task 6 will implement this
+  if (!kbTarget || !currentSets[kbTarget.setIndex]) return;
+  var set = currentSets[kbTarget.setIndex];
+
+  if (value === 'back') {
+    var str = String(set[kbTarget.field] || '');
+    set[kbTarget.field] = str.length > 1 ? parseFloat(str.slice(0, -1)) || 0 : 0;
+  } else if (value === 'dot') {
+    if (kbTarget.field === 'weight') {
+      var str = String(set[kbTarget.field] || '0');
+      if (str.indexOf('.') < 0) {
+        set[kbTarget.field] = str + '.';
+      }
+    }
+  } else if (value === 'plus') {
+    var step = kbTarget.field === 'weight' ? 0.25 : 1;
+    set[kbTarget.field] = roundVal((set[kbTarget.field] || 0) + step, kbTarget.field);
+  } else if (value === 'minus') {
+    var step = kbTarget.field === 'weight' ? 0.25 : 1;
+    set[kbTarget.field] = roundVal(Math.max(0, (set[kbTarget.field] || 0) - step), kbTarget.field);
+  } else if (value === 'confirm') {
+    closeKeyboard();
+  } else {
+    var cur = String(set[kbTarget.field] || '');
+    if (cur === '0' && value !== '0') cur = '';
+    if (cur === '' && value === '0') cur = '0';
+    else cur = cur + value;
+    set[kbTarget.field] = parseFloat(cur) || 0;
+  }
+
+  renderSetTable();
+  var cell = document.querySelector('.num-cell[data-set="' + kbTarget.setIndex + '"][data-field="' + kbTarget.field + '"]');
+  if (cell) { cell.classList.add('active'); cell.focus(); }
 }
+
+function roundVal(val, field) {
+  if (field === 'weight') {
+    return Math.round(val * 100) / 100;
+  }
+  return Math.round(val);
+}
+
+document.getElementById('kbGrid').addEventListener('click', function(e) {
+  var key = e.target.closest('.kb-key');
+  if (!key) return;
+  e.preventDefault();
+  handleKBInput(key.dataset.key);
+});
+
+document.getElementById('kbWrap').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+document.getElementById('setTableBody').addEventListener('mousedown', function(e) {
+  var cell = e.target.closest('.num-cell');
+  if (cell) {
+    e.preventDefault();
+    cell.focus();
+  }
+});
 
 // 打开弹窗 — 新增
 function openAddForm() {
@@ -963,6 +1036,7 @@ function openAddForm() {
   currentCategory = CATEGORY_KEYS[0];
   selectedExercise = '';
   document.getElementById('exCustom').value = '';
+  closeKeyboard();
   setSetCount(3);
   renderCatTabs();
   renderExGrid();
@@ -997,6 +1071,7 @@ function openEditForm(entry) {
   currentSets = entry.sets.map(function(set) {
     return { reps: set.reps, weight: set.weight, type: set.type || 'normal', done: set.done || false };
   });
+  closeKeyboard();
   setSetCount(currentSets.length);
   renderCatTabs();
   renderExGrid();
@@ -1025,15 +1100,19 @@ document.getElementById('submitAdd').addEventListener('click', () => {
   var name = document.getElementById('exCustom').value.trim() || selectedExercise;
   if (!name) { alert('请选择或输入动作名称'); return; }
 
-  const rows = setTableBody.querySelectorAll('.set-detail-row');
   const sets = [];
-  rows.forEach(row => {
-    const reps = parseInt(row.querySelector('.set-reps').value) || 0;
-    const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
-    if (reps > 0 || weight > 0) sets.push({ reps, weight });
+  currentSets.forEach(function(set) {
+    if ((set.reps > 0 || set.weight > 0) || set.done) {
+      sets.push({
+        reps: set.reps || 0,
+        weight: set.weight || 0,
+        type: set.type || 'normal',
+        done: set.done || false
+      });
+    }
   });
 
-  if (sets.length === 0) { alert('请至少填写一组的次数'); return; }
+  if (sets.length === 0) { alert('请至少填写一组的次数或重量'); return; }
 
   const volume = sets.reduce((s, set) => s + set.reps * set.weight, 0);
   const entry = { id: editingId || genId(), name, sets, volume };
