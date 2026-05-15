@@ -195,32 +195,89 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   }
 
-  /* 每组明细 */
-  .set-detail-list { margin-bottom: 12px; min-height: 180px; }
-  .set-detail-row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 0; border-bottom: 1px solid #f3f4f6;
+  /* 五列训练组表格 */
+  .set-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; min-height: 160px; }
+  .set-table th {
+    font-size: 11px; color: #9ca3af; font-weight: 500;
+    padding: 6px 2px; text-align: center;
   }
-  .set-detail-row .set-label {
-    font-size: 13px; color: #9ca3af; white-space: nowrap; min-width: 36px;
+  .set-table th:first-child { text-align: left; padding-left: 4px; }
+  .set-table td { padding: 5px 2px; text-align: center; vertical-align: middle; }
+  .set-row { transition: opacity 0.15s; }
+  .set-row.done-row { opacity: 0.45; }
+
+  /* 组类型标签 */
+  .set-type-tag {
+    display: inline-block; padding: 5px 8px; border-radius: 6px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    background: #eef2ff; color: #4f46e5; min-width: 34px;
+    text-align: center; position: relative; user-select: none;
+    white-space: nowrap;
   }
-  .set-detail-row input {
-    flex: 1; padding: 8px;
-    border: 1px solid #e5e7eb; border-radius: 8px;
-    font-size: 14px; font-family: inherit; text-align: center;
-    background: #fff; outline: none; min-width: 0;
+  .set-type-tag.warmup { background: #fef3c7; color: #d97706; }
+  .set-type-tag.dropset { background: #fce7f3; color: #db2777; }
+
+  .type-popup {
+    display: none; position: absolute; top: 100%; left: 0; z-index: 20;
+    background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    overflow: hidden; min-width: 80px; margin-top: 4px;
   }
-  .set-detail-row input:focus { border-color: #4f46e5; }
-  .set-detail-row .set-row-vol {
-    font-size: 13px; font-weight: 600; color: #4f46e5; white-space: nowrap; min-width: 40px; text-align: right;
+  .type-popup.show { display: block; }
+  .type-popup div {
+    padding: 9px 14px; font-size: 12px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
   }
-  .copy-all {
-    font-size: 12px; color: #4f46e5; cursor: pointer;
-    padding: 4px 10px; border-radius: 6px; background: #eef2ff;
-    border: none; font-weight: 500;
-    margin-bottom: 12px;
+  .type-popup div:hover { background: #f3f4f6; }
+
+  /* 历史数据 */
+  .last-data { font-size: 12px; color: #9ca3af; white-space: nowrap; }
+
+  /* 数值单元格 */
+  .num-cell {
+    display: inline-block; padding: 9px 4px; border-radius: 8px;
+    background: #f3f4f6; font-size: 15px; font-weight: 600;
+    color: #374151; cursor: pointer; min-width: 40px;
+    border: 2px solid transparent; text-align: center;
+    transition: all 0.15s; outline: none;
   }
-  .copy-all:hover { background: #dde4ff; }
+  .num-cell.active { border-color: #4f46e5; background: #fff; }
+  .num-cell:focus { border-color: #4f46e5; background: #fff; }
+
+  /* 完成 checkbox */
+  .cb-cell {
+    width: 26px; height: 26px; border-radius: 6px;
+    border: 2px solid #d1d5db; cursor: pointer; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 13px; color: transparent; transition: all 0.15s;
+    user-select: none;
+  }
+  .cb-cell.done { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+
+  /* 自定义键盘 */
+  .kb-wrap { display: none; margin-top: 12px; }
+  .kb-wrap.show { display: block; }
+  .kb-focus-hint {
+    text-align: center; font-size: 12px; color: #4f46e5;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .kb-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; background: #f8f9fa; padding: 10px;
+    border-radius: 14px;
+  }
+  .kb-key {
+    padding: 14px 0; border-radius: 10px; border: none;
+    font-size: 20px; font-weight: 600; cursor: pointer;
+    background: #fff; color: #1a1a1a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    text-align: center; transition: all 0.1s;
+    font-family: inherit;
+  }
+  .kb-key:active { background: #e5e7eb; transform: scale(0.95); }
+  .kb-key.fn { font-size: 13px; color: #6b7280; background: #f3f4f6; }
+  .kb-key.accent { background: #4f46e5; color: #fff; font-size: 14px; }
+  .kb-key.adj { background: #eef2ff; color: #4f46e5; font-size: 22px; }
+  .kb-key.span2 { grid-column: span 2; }
 
   .set-count-ctrl {
     display: flex; align-items: center; gap: 12px;
