@@ -452,16 +452,28 @@ let selectedDate = formatDate(today);
 
 let data = JSON.parse(localStorage.getItem('fitness_data')) || {};
 
-// 迁移旧数据：扁平结构 {sets,reps,weight} → 每组独立 {sets:[{reps,weight},...]}
 let migrated = false;
 Object.keys(data).forEach(date => {
   data[date] = data[date].map(e => {
-    if (Array.isArray(e.sets)) return e;
+    if (Array.isArray(e.sets)) {
+      // 已是新格式，补全 type/done 字段
+      var setsMigrated = false;
+      e.sets = e.sets.map(function(set) {
+        if (set.type === undefined) { set.type = 'normal'; setsMigrated = true; }
+        if (set.done === undefined) { set.done = false; setsMigrated = true; }
+        return set;
+      });
+      if (setsMigrated) { migrated = true; }
+      return e;
+    }
+    // 旧格式 {sets,reps,weight} → 新格式
     migrated = true;
     return {
       id: e.id || genId(),
       name: e.name,
-      sets: Array.from({ length: e.sets || 1 }, () => ({ reps: e.reps || 0, weight: e.weight || 0 })),
+      sets: Array.from({ length: e.sets || 1 }, function(_, i) {
+        return { reps: e.reps || 0, weight: e.weight || 0, type: 'normal', done: false };
+      }),
       volume: e.volume || 0
     };
   });
