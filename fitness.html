@@ -169,6 +169,7 @@
     padding: 24px 20px; width: 100%; max-width: 500px;
     max-height: 90vh; overflow-y: auto;
     animation: slideUp 0.2s ease;
+    min-height: 420px;
   }
   @keyframes slideUp {
     from { transform: translateY(100%); }
@@ -195,7 +196,7 @@
   }
 
   /* 每组明细 */
-  .set-detail-list { margin-bottom: 12px; }
+  .set-detail-list { margin-bottom: 12px; min-height: 180px; }
   .set-detail-row {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 0; border-bottom: 1px solid #f3f4f6;
@@ -252,6 +253,35 @@
   .btn-submit:hover { opacity: 0.9; }
   .btn-cancel { background: #f3f4f6; color: #374151; }
   .btn-cancel:hover { background: #e5e7eb; }
+
+  .install-app {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+  .install-app[hidden] { display: none !important; }
+  .install-app p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #6b7280;
+  }
+  .install-app button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .install-app button:hover { opacity: 0.92; }
+  .install-app button[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -276,6 +306,11 @@
   <div class="exercise-list" id="exerciseList"></div>
 
   <button class="add-btn" id="addBtn">＋ 添加训练</button>
+
+  <div class="install-app" id="installApp" hidden>
+    <p id="installAppText"></p>
+    <button type="button" id="installAppBtn" hidden>安装为应用</button>
+  </div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -312,6 +347,48 @@
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
+
+(function installableApp() {
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    (typeof navigator.standalone === 'boolean' && navigator.standalone);
+  if (isStandalone) return;
+
+  const wrap = document.getElementById('installApp');
+  const textEl = document.getElementById('installAppText');
+  const btn = document.getElementById('installAppBtn');
+  if (!wrap || !textEl || !btn) return;
+
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    textEl.textContent =
+      '在 Chrome / Edge 中可将本站安装到桌面或开始菜单，像独立应用一样打开。';
+    btn.hidden = false;
+    wrap.hidden = false;
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    btn.hidden = true;
+    wrap.hidden = true;
+  });
+
+  if (isIOS) {
+    textEl.textContent =
+      '在 Safari 中点底部分享按钮，选择「添加到主屏幕」，即可像 App 一样全屏使用。';
+    wrap.hidden = false;
+  }
+})();
 
 const PRESETS = [
   '卧推', '深蹲', '硬拉', '引体向上', '推举', '划船', '弯举',
