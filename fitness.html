@@ -733,63 +733,29 @@ let currentSetCount = 3;
 let editingId = null; // 编辑模式下的条目 id
 var currentCategory = CATEGORY_KEYS[0];
 var selectedExercise = '';
+var kbTarget = null;
+var currentSets = [];
 
-function addSetRow(i, reps, weight) {
-  const row = document.createElement('div');
-  row.className = 'set-detail-row';
-  row.innerHTML = `
-    <span class="set-label">第${i + 1}组</span>
-    <input type="number" class="set-reps" min="0" value="${reps}" placeholder="次">
-    <span style="font-size:13px;color:#9ca3af;">次 ×</span>
-    <input type="number" class="set-weight" min="0" value="${weight}" step="0.5" placeholder="kg">
-    <span style="font-size:13px;color:#9ca3af;">kg</span>
-    <span class="set-row-vol">${(reps * weight).toLocaleString()} kg</span>
-  `;
-  setTableBody.appendChild(row);
-  row.querySelectorAll('input').forEach(inp => {
-    inp.addEventListener('input', () => {
-      updateRowVol(row);
-      updateTotalVol();
-    });
-  });
-}
 
 function setSetCount(n) {
   n = Math.max(1, Math.min(20, n));
-  const rows = setTableBody.querySelectorAll('.set-detail-row');
-  const oldValues = [];
-  rows.forEach(row => {
-    oldValues.push({
-      reps: parseInt(row.querySelector('.set-reps').value) || 0,
-      weight: parseFloat(row.querySelector('.set-weight').value) || 0
-    });
-  });
-
-  setTableBody.innerHTML = '';
-  for (let i = 0; i < n; i++) {
-    const r = oldValues[i] || { reps: 10, weight: 0 };
-    addSetRow(i, r.reps, r.weight);
+  var oldSets = currentSets.slice();
+  currentSets = [];
+  for (var i = 0; i < n; i++) {
+    currentSets[i] = oldSets[i] || { reps: 0, weight: 0, type: 'normal', done: false };
   }
   currentSetCount = n;
   setCountDisplay.textContent = n;
-  updateTotalVol();
+  renderSetTable();
 }
 
-function updateRowVol(row) {
-  const reps = parseInt(row.querySelector('.set-reps').value) || 0;
-  const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
-  row.querySelector('.set-row-vol').textContent = (reps * weight).toLocaleString() + ' kg';
-}
 
 function updateTotalVol() {
-  const rows = setTableBody.querySelectorAll('.set-detail-row');
-  let total = 0;
-  rows.forEach(row => {
-    const reps = parseInt(row.querySelector('.set-reps').value) || 0;
-    const weight = parseFloat(row.querySelector('.set-weight').value) || 0;
-    total += reps * weight;
+  var total = 0;
+  currentSets.forEach(function(set) {
+    total += (set.reps || 0) * (set.weight || 0);
   });
-  volPreview.textContent = total.toLocaleString();
+  document.getElementById('volPreview').textContent = total.toLocaleString();
 }
 
 // +/- 组数
@@ -801,19 +767,6 @@ document.getElementById('setCountPlus').addEventListener('click', () => {
 });
 
 // 复制第一组到所有
-document.getElementById('copyAll').addEventListener('click', () => {
-  const rows = setTableBody.querySelectorAll('.set-detail-row');
-  if (rows.length < 2) return;
-  const firstReps = rows[0].querySelector('.set-reps').value;
-  const firstWeight = rows[0].querySelector('.set-weight').value;
-  rows.forEach((row, i) => {
-    if (i === 0) return;
-    row.querySelector('.set-reps').value = firstReps;
-    row.querySelector('.set-weight').value = firstWeight;
-    updateRowVol(row);
-  });
-  updateTotalVol();
-});
 
 function renderCatTabs() {
   var container = document.getElementById('catTabs');
@@ -863,6 +816,145 @@ function renderExGrid() {
   });
 }
 
+function getFormalCount(sets, upTo) {
+  var count = 0;
+  for (var i = 0; i < upTo; i++) {
+    if (sets[i] && sets[i].type === 'normal') count++;
+  }
+  return count;
+}
+
+function getSetLabel(sets, i) {
+  if (!sets[i]) return '第' + (i + 1) + '组';
+  if (sets[i].type === 'warmup') return '热';
+  if (sets[i].type === 'dropset') return '减';
+  var num = getFormalCount(sets, i) + 1;
+  return '第' + num + '组';
+}
+
+function getSetTypeClass(sets, i) {
+  if (!sets[i]) return '';
+  if (sets[i].type === 'warmup') return ' warmup';
+  if (sets[i].type === 'dropset') return ' dropset';
+  return '';
+}
+
+function renderSetTable() {
+  var tbody = document.getElementById('setTableBody');
+  var lastSets = null;
+  var exName = document.getElementById('exCustom').value.trim() || selectedExercise;
+  if (exName) {
+    lastSets = getLastExerciseData(exName, selectedDate);
+  }
+
+  var html = '';
+  for (var i = 0; i < currentSetCount; i++) {
+    var set = currentSets[i] || { reps: 0, weight: 0, type: 'normal', done: false };
+    var typeClass = getSetTypeClass(currentSets, i);
+    var label = getSetLabel(currentSets, i);
+    var doneClass = set.done ? ' done-row' : '';
+    var cbClass = set.done ? ' done' : '';
+
+    var lastText = '—';
+    if (lastSets && lastSets[i]) {
+      var ls = lastSets[i];
+      lastText = ls.weight + '×' + ls.reps;
+    }
+
+    var weightVal = set.weight || '';
+    var repsVal = set.reps || '';
+
+    html += '<tr class="set-row' + doneClass + '">' +
+      '<td><span class="set-type-tag' + typeClass + '" data-set="' + i + '">' + escapeHtml(label) + '</span></td>' +
+      '<td><span class="last-data">' + lastText + '</span></td>' +
+      '<td><span class="num-cell" data-set="' + i + '" data-field="weight" tabindex="0">' + weightVal + '</span></td>' +
+      '<td><span class="num-cell" data-set="' + i + '" data-field="reps" tabindex="0">' + repsVal + '</span></td>' +
+      '<td><span class="cb-cell' + cbClass + '" data-set="' + i + '">✓</span></td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+
+  bindSetTableEvents();
+  updateTotalVol();
+}
+
+function bindSetTableEvents() {
+  document.querySelectorAll('.set-type-tag').forEach(function(tag) {
+    tag.addEventListener('click', function(e) {
+      e.stopPropagation();
+      showTypePopup(tag);
+    });
+  });
+
+  document.querySelectorAll('.num-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      openKeyboard(cell);
+    });
+    cell.addEventListener('focus', function() {
+      openKeyboard(cell);
+    });
+  });
+
+  document.querySelectorAll('.cb-cell').forEach(function(cb) {
+    cb.addEventListener('click', function() {
+      var si = parseInt(cb.dataset.set);
+      if (currentSets[si]) {
+        currentSets[si].done = !currentSets[si].done;
+        renderSetTable();
+      }
+    });
+  });
+}
+
+function showTypePopup(tag) {
+  document.querySelectorAll('.type-popup.show').forEach(function(p) {
+    p.classList.remove('show');
+  });
+
+  var si = parseInt(tag.dataset.set);
+  var popup = tag.querySelector('.type-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.className = 'type-popup show';
+    popup.innerHTML = '<div data-type="normal">正式组</div><div data-type="warmup">热身组</div><div data-type="dropset">递减组</div>';
+    tag.appendChild(popup);
+
+    popup.querySelectorAll('div').forEach(function(div) {
+      div.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var newType = div.dataset.type;
+        if (currentSets[si]) {
+          currentSets[si].type = newType;
+        }
+        popup.remove();
+        renderSetTable();
+      });
+    });
+  } else {
+    popup.classList.toggle('show');
+  }
+
+  setTimeout(function() {
+    document.addEventListener('click', function closePopup() {
+      var p = tag.querySelector('.type-popup');
+      if (p) p.classList.remove('show');
+      document.removeEventListener('click', closePopup);
+    }, { once: true });
+  }, 0);
+}
+
+function openKeyboard(cell) {
+  // Task 6 will implement this
+}
+
+function closeKeyboard() {
+  // Task 6 will implement this
+}
+
+function handleKBInput(value) {
+  // Task 6 will implement this
+}
+
 // 打开弹窗 — 新增
 function openAddForm() {
   editingId = null;
@@ -902,13 +994,10 @@ function openEditForm(entry) {
     document.getElementById('exCustom').value = entry.name;
   }
 
-  setTableBody.innerHTML = '';
-  entry.sets.forEach(function(set, i) {
-    addSetRow(i, set.reps, set.weight);
+  currentSets = entry.sets.map(function(set) {
+    return { reps: set.reps, weight: set.weight, type: set.type || 'normal', done: set.done || false };
   });
-  currentSetCount = entry.sets.length;
-  setCountDisplay.textContent = currentSetCount;
-  updateTotalVol();
+  setSetCount(currentSets.length);
   renderCatTabs();
   renderExGrid();
   overlay.classList.add('show');
