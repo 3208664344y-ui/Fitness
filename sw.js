@@ -1,4 +1,4 @@
-const CACHE = 'fitness-v2';
+const CACHE = 'fitness-v4';
 const ASSETS = [
   'fitness.html',
   'fitness-manifest.json'

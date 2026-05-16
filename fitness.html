@@ -14,23 +14,36 @@
 <meta name="theme-color" content="#4f46e5">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    min-height: 100dvh;
+  }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f0f2f5;
+    background: #fff;
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 20px;
+    min-height: 100dvh;
     user-select: none;
+  }
+  /* 全屏主容器（日历 / 训练） */
+  .calendar-view,
+  .training-view {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .training-view {
+    padding-top: env(safe-area-inset-top);
   }
   .app {
     width: 100%;
-    max-width: 500px;
-    background: #fff;
-    border-radius: 20px;
-    padding: 24px 20px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    height: fit-content;
+    padding: calc(16px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 24px max(20px, env(safe-area-inset-left));
+    min-height: calc(100dvh - 64px - env(safe-area-inset-bottom));
   }
 
   .header {
@@ -165,9 +178,15 @@
   .overlay.show { display: flex; }
   .sheet {
     background: #fff;
-    border-radius: 20px 20px 0 0;
-    padding: 24px 20px; width: 100%; max-width: 500px;
-    max-height: 90vh; overflow-y: auto;
+    border-radius: 0;
+    padding: 24px max(20px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    width: 100%;
+    max-width: none;
+    max-height: 90vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: padding-bottom 0.25s ease;
     animation: slideUp 0.2s ease;
     min-height: 420px;
   }
@@ -252,18 +271,79 @@
     user-select: none;
   }
   .cb-cell.done { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+  .cp-btn {
+    display: inline-block; width: 22px; height: 22px; border-radius: 5px;
+    border: none; background: #f3f4f6; color: #9ca3af;
+    font-size: 11px; cursor: pointer; line-height: 22px; text-align: center;
+    flex-shrink: 0; margin-right: 2px; vertical-align: middle;
+  }
+  .cp-btn:active { background: #e5e7eb; color: #4f46e5; }
 
-  /* 自定义键盘 */
-  .kb-wrap { display: none; margin-top: 12px; }
-  .kb-wrap.show { display: block; }
+  /* 自定义键盘 — 贴底弹出，内容上推 */
+  .kb-wrap {
+    display: block;
+    visibility: hidden;
+    pointer-events: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+    margin: 0;
+    padding: 10px max(12px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    background: #f0f2f5;
+    border-top: 1px solid #eaecef;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
+    transform: translateY(100%);
+    transition: transform 0.25s ease, visibility 0.25s;
+  }
+  .kb-wrap.show {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  #trainingExecView {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .kb-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
   .kb-focus-hint {
-    text-align: center; font-size: 12px; color: #4f46e5;
-    margin-bottom: 8px; font-weight: 600;
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    color: #4f46e5;
+    margin-bottom: 0;
+    font-weight: 600;
+  }
+  .kb-dismiss {
+    flex-shrink: 0;
+    border: none;
+    background: #fff;
+    color: #4f46e5;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  .kb-dismiss:active { background: #eef2ff; }
+  .overlay.keyboard-open .sheet {
+    max-height: 100dvh;
+    padding-bottom: calc(var(--kb-dock-height, 260px) + 16px);
+  }
+  #trainingExecView.keyboard-open {
+    padding-bottom: calc(var(--kb-dock-height, 260px) + 24px);
   }
   .kb-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 6px; background: #f8f9fa; padding: 10px;
-    border-radius: 14px;
+    gap: 6px; background: #fff; padding: 10px;
+    border-radius: 12px;
   }
   .kb-key {
     padding: 14px 0; border-radius: 10px; border: none;
@@ -376,24 +456,65 @@
   .install-app button:hover { opacity: 0.92; }
   .install-app button[hidden] { display: none; }
 
-  /* 底部导航 */
+  /* 底部导航 — 币安布局 + 浅色主题 */
   .tab-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 500px; background: #fff;
-    border-top: 1px solid #f3f4f6; display: flex;
-    padding: 6px 0 env(safe-area-inset-bottom);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    background: #fff;
+    border-top: 1px solid #eaecef;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
     z-index: 50;
   }
   .tab-item {
-    flex: 1; text-align: center; padding: 8px 0;
-    font-size: 11px; font-weight: 600; color: #9ca3af;
-    cursor: pointer; border: none; background: none;
-    transition: color 0.15s;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 4px 0;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: #b7bdc6;
+    cursor: pointer;
+    border: none;
+    background: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s ease, background 0.15s ease;
   }
-  .tab-item.active { color: #4f46e5; }
-  .tab-item .tab-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  .tab-item:active { background: #f5f5f5; }
+  .tab-item.active { color: #4f46e5; font-weight: 600; }
+  .tab-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+  }
+  .tab-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+  }
+  .tab-item.active .tab-icon svg {
+    stroke-width: 2;
+    transform: scale(1.06);
+  }
 
-  /* 训练视图容器 */
+  /* 训练 / 日历视图切换 */
   .training-view { display: none; }
   .training-view.show { display: block; }
   .calendar-view.show { display: block; }
@@ -423,12 +544,16 @@
   .plan-ex-item .ex-info { flex: 1; }
   .plan-ex-item .ex-info .ex-name { font-size: 14px; font-weight: 600; }
   .plan-ex-item .ex-info .ex-detail { font-size: 12px; color: #9ca3af; }
-  .plan-ex-item .order-btns { display: flex; flex-direction: column; gap: 2px; }
-  .plan-ex-item .order-btns button {
-    width: 24px; height: 20px; border: none; border-radius: 4px;
-    background: #f3f4f6; color: #6b7280; font-size: 11px; cursor: pointer;
-    line-height: 1;
+  .plan-ex-item { touch-action: manipulation; }
+  .plan-ex-item.dragging { opacity: 0.4; transform: scale(0.97); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .plan-ex-item.drag-over { border-top: 3px solid #4f46e5; }
+  .drag-handle {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; cursor: grab; padding: 4px 2px; color: #d1d5db;
+    font-size: 12px; line-height: 1; user-select: none;
+    flex-shrink: 0; min-width: 16px; touch-action: none;
   }
+  .drag-handle:active { cursor: grabbing; color: #4f46e5; }
 
   /* 训练执行 */
   .training-header {
@@ -456,37 +581,179 @@
   .current-ex-display .ce-name { font-size: 28px; font-weight: 800; color: #1a1a1a; }
   .current-ex-display .ce-set-info { font-size: 14px; color: #6b7280; margin-top: 6px; }
 
-  .training-input-row { display: flex; gap: 12px; margin-bottom: 14px; }
-  .training-big-input {
-    flex: 1; text-align: center; padding: 18px 12px;
-    background: #fff; border-radius: 14px; cursor: pointer;
-    border: 2px solid transparent; transition: all 0.15s;
-  }
-  .training-big-input.active { border-color: #4f46e5; }
-  .training-big-input .t-val { font-size: 36px; font-weight: 800; color: #1a1a1a; }
-  .training-big-input .t-lbl { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-
-  .set-type-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
-  .st-btn {
-    padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
-    border: none; cursor: pointer; background: #f3f4f6; color: #6b7280;
-  }
-  .st-btn.sel { background: #4f46e5; color: #fff; }
-
-  .training-actions { display: flex; gap: 10px; margin-bottom: 16px; }
   .training-btn {
-    flex: 1; padding: 16px; border: none; border-radius: 14px;
+    padding: 16px; border: none; border-radius: 14px;
     font-size: 16px; font-weight: 700; cursor: pointer;
   }
   .training-btn.primary { background: #4f46e5; color: #fff; }
-  .training-btn.ghost { background: #f3f4f6; color: #6b7280; }
 
   .training-done-banner { text-align: center; padding: 40px 20px; }
   .training-done-banner .td-icon { font-size: 64px; margin-bottom: 16px; }
   .training-done-banner h3 { font-size: 22px; color: #1a1a1a; margin-bottom: 8px; }
   .training-done-banner .td-stats { font-size: 14px; color: #6b7280; margin-bottom: 4px; }
 
-  body { padding-bottom: calc(20px + 60px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+
+  /* 身体数据视图 */
+  .body-view { display: none; }
+  .body-view.show { display: block; }
+
+  /* 体重大卡片 */
+  .body-card-lg {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    border-radius: 16px; padding: 20px;
+    color: #fff; cursor: pointer;
+    margin-bottom: 12px;
+    transition: transform 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .body-card-lg::after {
+    content: ''; position: absolute;
+    right: -20px; bottom: -20px;
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .body-card-lg:active { transform: scale(0.98); }
+  .body-card-lg .bc-label { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
+  .body-card-lg .bc-value { font-size: 40px; font-weight: 800; line-height: 1; }
+  .body-card-lg .bc-unit { font-size: 16px; font-weight: 500; opacity: 0.7; margin-left: 4px; }
+  .body-card-lg .bc-sub {
+    font-size: 13px; opacity: 0.7; margin-top: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .body-card-lg .bc-sub .bc-arrow {
+    margin-left: auto; opacity: 0.6;
+    font-size: 16px;
+  }
+
+  /* 指标小卡片网格 */
+  .body-card-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 12px;
+  }
+  .body-card-sm {
+    background: #f9fafb; border-radius: 14px;
+    padding: 16px; cursor: pointer;
+    transition: all 0.15s; position: relative;
+  }
+  .body-card-sm:active { background: #eef2ff; transform: scale(0.98); }
+  .body-card-sm .bcs-label { font-size: 12px; color: #9ca3af; font-weight: 600; margin-bottom: 6px; }
+  .body-card-sm .bcs-value {
+    font-size: 26px; font-weight: 700; color: #1a1a1a;
+    line-height: 1;
+  }
+  .body-card-sm .bcs-unit { font-size: 13px; color: #9ca3af; margin-left: 2px; }
+  .body-card-sm .bcs-sub {
+    font-size: 11px; color: #9ca3af; margin-top: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .body-card-sm .bcs-arrow {
+    margin-left: auto; color: #d1d5db; font-size: 14px;
+  }
+  .body-card-sm .bcs-delta {
+    font-weight: 600; font-size: 11px;
+  }
+  .delta-down { color: #10b981; }
+  .delta-up { color: #ef4444; }
+  .delta-flat { color: #9ca3af; }
+  .bcs-empty { color: #d1d5db; font-size: 14px; }
+
+  /* 详情页 */
+  .body-detail-chart-wrap {
+    background: #f9fafb; border-radius: 14px;
+    padding: 16px; margin: 0 20px 16px;
+  }
+  .body-detail-chart-wrap canvas {
+    display: block; width: 100%; height: auto;
+  }
+
+  /* 历史记录卡片 */
+  .body-history-card {
+    padding: 12px 14px; background: #f9fafb; border-radius: 10px;
+    margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+  }
+  .body-history-card .bh-value {
+    font-size: 18px; font-weight: 700; color: #1a1a1a;
+  }
+  .body-history-card .bh-unit {
+    font-size: 11px; color: #9ca3af; margin-left: 1px;
+  }
+  .body-history-card .bh-note {
+    flex: 1; font-size: 12px; color: #9ca3af;
+    font-style: italic;
+  }
+
+  /* 快捷录入弹窗 */
+  #bodyQuickOverlay.keyboard-open .sheet {
+    max-height: 100dvh;
+    padding-bottom: calc(var(--kb-dock-height, 260px) + 16px);
+  }
+
+  /* 快速开始按钮 */
+  .quick-start-btn {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border-radius: 16px; padding: 20px;
+    color: #fff; cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    transition: transform 0.15s;
+    margin-bottom: 4px;
+  }
+  .quick-start-btn:active { transform: scale(0.98); }
+  .qs-icon { font-size: 32px; }
+  .qs-text { flex: 1; }
+  .qs-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .qs-desc { font-size: 12px; opacity: 0.75; }
+  .qs-arrow { font-size: 20px; opacity: 0.6; }
+
+  /* 快速训练视图 */
+  #quickTrainingView { padding-bottom: 120px; }
+  #quickTrainingView .training-header {
+    background: #7c3aed;
+  }
+  .quick-ex-card {
+    padding: 16px; background: #f9fafb; border-radius: 14px;
+    margin: 0 20px 10px;
+  }
+  .quick-ex-card .qe-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .quick-ex-card .qe-name {
+    font-size: 16px; font-weight: 700; color: #1a1a1a;
+  }
+  .quick-ex-card .qe-set-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; font-size: 13px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .quick-ex-card .qe-set-row:last-child { border-bottom: none; }
+  .quick-ex-card .qe-set-tag {
+    font-size: 11px; padding: 3px 6px; border-radius: 4px;
+    background: #eef2ff; color: #4f46e5; font-weight: 600;
+    min-width: 36px; text-align: center; white-space: nowrap;
+  }
+  .quick-ex-card .qe-set-tag.warmup { background: #fef3c7; color: #d97706; }
+  .quick-ex-card .qe-set-tag.dropset { background: #fce7f3; color: #db2777; }
+  .quick-ex-card .qe-set-detail {
+    flex: 1; color: #6b7280; font-size: 14px; font-weight: 500;
+  }
+  .quick-ex-card .qe-cb {
+    width: 26px; height: 26px; border-radius: 6px;
+    border: 2px solid #d1d5db; cursor: pointer; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 13px; color: transparent; transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .quick-ex-card .qe-cb.done {
+    background: #10b981; border-color: #10b981; color: #fff;
+  }
+  .quick-ex-card.done-all { opacity: 0.55; }
+  .quick-ex-card.done-all .qe-name { text-decoration: line-through; }
+
+  #quickTrainingOverlay.keyboard-open .sheet {
+    max-height: 100dvh;
+    padding-bottom: calc(var(--kb-dock-height, 260px) + 16px);
+  }
 </style>
 </head>
 <body>
@@ -521,11 +788,23 @@
 </div>
 
 <div class="tab-bar" id="tabBar">
-  <button class="tab-item active" data-tab="calendar">
-    <span class="tab-icon">📅</span>日历
+  <button class="tab-item active" data-tab="calendar" type="button" aria-label="日历">
+    <span class="tab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    </span>
+    <span>日历</span>
   </button>
-  <button class="tab-item" data-tab="training">
-    <span class="tab-icon">🏋</span>训练
+  <button class="tab-item" data-tab="training" type="button" aria-label="训练">
+    <span class="tab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5h2v11h-2zM15.5 6.5h2v11h-2z"/><path d="M4 9.5h4M16 9.5h4M8.5 12h7"/></svg>
+    </span>
+    <span>训练</span>
+  </button>
+  <button class="tab-item" data-tab="body" type="button" aria-label="身体">
+    <span class="tab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 8v8M12 6v12M17 8v8"/></svg>
+    </span>
+    <span>身体</span>
   </button>
 </div>
 
@@ -533,8 +812,22 @@
   <!-- 计划列表 -->
   <div id="planListView" style="padding-bottom: 80px;">
     <div class="header" style="padding: 16px 20px;">
-      <h1>训练计划</h1>
-      <button class="today-btn" id="newPlanBtn" style="font-size:13px;">＋ 新建</button>
+      <h1>训练</h1>
+    </div>
+    <div style="padding:0 20px;">
+      <div class="quick-start-btn" id="quickStartBtn">
+        <div class="qs-icon">⚡</div>
+        <div class="qs-text">
+          <div class="qs-title">快速开始</div>
+          <div class="qs-desc">直接开始训练，每完成一组打勾记录</div>
+        </div>
+        <div class="qs-arrow">→</div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px;">
+        <span style="font-size:15px;font-weight:700;color:#1a1a1a;">训练计划</span>
+        <button class="today-btn" id="newPlanBtn" style="font-size:13px;">＋ 新建</button>
+      </div>
     </div>
     <div id="planList" style="padding:0 20px;"></div>
   </div>
@@ -562,37 +855,40 @@
     <div class="training-header" id="trainingHeader">
       <button style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;" id="trainingPause">⏸ 暂停</button>
       <span class="th-title" id="trainingPlanName">推胸日</span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:1px;" id="trainingTimer"></span>
       <span class="th-progress" id="trainingProgress">1/4</span>
+      <button style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:12px;padding:4px 10px;border-radius:6px;cursor:pointer;" id="trainingEndBtn">结束</button>
     </div>
     <div style="padding: 0 20px;">
       <div class="ex-progress-dots" id="exProgressDots"></div>
       <div class="current-ex-display">
         <div class="ce-name" id="currentExName">卧推</div>
-        <div class="ce-set-info" id="currentSetInfo">第 1 组（共 4 组）· 目标 60kg × 8</div>
-      </div>
-      <div class="training-input-row">
-        <div class="training-big-input" id="trainingWeightCell" data-field="weight">
-          <div class="t-val" id="trainingWeightVal">60</div>
-          <div class="t-lbl">重量 kg</div>
-        </div>
-        <div class="training-big-input" id="trainingRepsCell" data-field="reps">
-          <div class="t-val" id="trainingRepsVal">8</div>
-          <div class="t-lbl">次数</div>
-        </div>
-      </div>
-      <div class="set-type-row">
-        <button class="st-btn sel" data-tt="normal">正式组</button>
-        <button class="st-btn" data-tt="warmup">热身组</button>
-        <button class="st-btn" data-tt="dropset">递减组</button>
-      </div>
-      <div class="training-actions">
-        <button class="training-btn ghost" id="trainingSkip">跳过</button>
-        <button class="training-btn primary" id="trainingComplete">完成本组 ✓</button>
+        <div class="ce-set-info" id="currentSetInfo">目标 60kg × 8 次 · 共 4 组</div>
       </div>
 
+      <div id="trainingSetTableWrap">
+        <table class="set-table" id="trainingSetTable">
+          <thead>
+            <tr>
+              <th style="width:17%;text-align:left;">组</th>
+              <th style="width:20%;">上一次</th>
+              <th style="width:24%;">重量 (kg)</th>
+              <th style="width:22%;">次数</th>
+              <th style="width:10%;">✓</th>
+            </tr>
+          </thead>
+          <tbody id="trainingSetTableBody"></tbody>
+        </table>
+      </div>
+
+      <button class="training-btn primary" id="trainingSaveAndNext" style="width:100%; margin-top:8px;">保存并继续 →</button>
+
       <!-- 训练键盘 -->
-      <div class="kb-wrap" id="trainingKbWrap" style="display:none;">
-        <div class="kb-focus-hint" id="trainingKbHint">正在输入：重量 (±0.25 kg)</div>
+      <div class="kb-wrap" id="trainingKbWrap">
+        <div class="kb-toolbar">
+          <div class="kb-focus-hint" id="trainingKbHint">正在输入：重量 (±0.25 kg)</div>
+          <button type="button" class="kb-dismiss" data-kb-dismiss="training">收起键盘</button>
+        </div>
         <div class="kb-grid" id="trainingKbGrid">
           <button class="kb-key" data-key="1">1</button>
           <button class="kb-key" data-key="2">2</button>
@@ -623,11 +919,103 @@
     </div>
     <button class="training-btn primary" id="doneBackToCalendar" style="width:calc(100% - 40px); margin:0 20px;">返回日历</button>
   </div>
+
+  <!-- 快速训练 -->
+  <div id="quickTrainingView" style="display:none;">
+    <div class="training-header">
+      <button style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;" id="quickTrainingBack">◀ 返回</button>
+      <span class="th-title">快速训练</span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:1px;" id="quickTimer"></span>
+      <span class="th-progress" id="quickProgress">0/0</span>
+      <button style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:12px;padding:4px 10px;border-radius:6px;cursor:pointer;" id="quickEndBtn">结束</button>
+    </div>
+    <div id="quickExList" style="padding-top:12px;"></div>
+    <button class="add-btn" id="quickAddExBtn" style="display:block;width:calc(100% - 40px);margin:0 20px 12px;">＋ 添加动作</button>
+    <button class="training-btn primary" id="quickFinishBtn" style="display:block;width:calc(100% - 40px);margin:0 20px 80px;">完成训练 ✓</button>
+  </div>
+</div>
+
+<!-- 身体数据视图 -->
+<div class="body-view" id="bodyView">
+  <!-- 仪表盘 -->
+  <div id="bodyDashboard">
+    <div class="header" style="padding: 16px 20px;">
+      <h1>身体数据</h1>
+    </div>
+    <div style="padding:0 20px;">
+      <div class="body-card-lg" id="bodyCardWeight" data-cat="weight">
+        <div class="bc-label">⚖ 体重</div>
+        <div><span class="bc-value">--</span><span class="bc-unit">kg</span></div>
+        <div class="bc-sub"><span id="bodyWeightDate">--</span><span id="bodyWeightDelta"></span><span class="bc-arrow">→</span></div>
+      </div>
+      <div class="body-card-grid" id="bodyCardGrid"></div>
+      <button class="add-btn" id="bodyAddCustomBtn" style="margin-bottom:80px;">＋ 自定义记录</button>
+    </div>
+  </div>
+
+  <!-- 指标详情页 -->
+  <div id="bodyDetailView" style="display:none;">
+    <div class="header" style="padding: 16px 20px;">
+      <button class="nav-btn" id="bodyDetailBack">◀</button>
+      <h1 id="bodyDetailTitle">体重</h1>
+      <button class="today-btn" id="bodyDetailQuickAdd" style="font-size:13px;">＋ 记录</button>
+    </div>
+    <div class="body-detail-chart-wrap">
+      <canvas id="bodyDetailChart"></canvas>
+    </div>
+    <div id="bodyDetailList" style="padding:0 20px 80px;"></div>
+  </div>
+</div>
+
+<!-- 快捷录入弹窗 -->
+<div class="overlay" id="bodyQuickOverlay" style="z-index:200;">
+  <div class="sheet">
+    <h3 id="bodyQuickTitle">记录体重</h3>
+    <div class="form-group">
+      <label id="bodyQuickLabel">数值 (kg)</label>
+      <span class="num-cell" id="bodyQuickValueCell" tabindex="0" style="display:inline-block;min-width:80px;font-size:28px;">0</span>
+    </div>
+    <div class="form-group">
+      <label>日期</label>
+      <input type="date" id="bodyQuickDate">
+    </div>
+    <div class="form-group">
+      <label>备注（可选）</label>
+      <input type="text" id="bodyQuickNote" placeholder="例如：晨起空腹">
+    </div>
+    <div class="kb-wrap" id="bodyQuickKbWrap">
+      <div class="kb-toolbar">
+        <div class="kb-focus-hint" id="bodyQuickKbHint">正在输入 (±0.1)</div>
+        <button type="button" class="kb-dismiss" data-kb-dismiss="bodyQuick">收起键盘</button>
+      </div>
+      <div class="kb-grid" id="bodyQuickKbGrid">
+        <button class="kb-key" data-key="1">1</button>
+        <button class="kb-key" data-key="2">2</button>
+        <button class="kb-key" data-key="3">3</button>
+        <button class="kb-key fn" data-key="back">⌫</button>
+        <button class="kb-key" data-key="4">4</button>
+        <button class="kb-key" data-key="5">5</button>
+        <button class="kb-key" data-key="6">6</button>
+        <button class="kb-key adj" data-key="plus">+</button>
+        <button class="kb-key" data-key="7">7</button>
+        <button class="kb-key" data-key="8">8</button>
+        <button class="kb-key" data-key="9">9</button>
+        <button class="kb-key adj" data-key="minus">−</button>
+        <button class="kb-key fn" data-key="dot">.</button>
+        <button class="kb-key" data-key="0">0</button>
+        <button class="kb-key accent span2" data-key="confirm">确认</button>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="bodyQuickCancel">取消</button>
+      <button class="btn-submit" id="bodyQuickSubmit">确认</button>
+    </div>
+  </div>
 </div>
 
 <div class="overlay" id="planExOverlay" style="z-index:200;">
   <div class="sheet">
-    <h3>添加动作到计划</h3>
+    <h3 id="planExTitle">添加动作到计划</h3>
     <div class="form-group">
       <label>选择动作</label>
       <div class="cat-tabs" id="planCatTabs"></div>
@@ -641,14 +1029,40 @@
         <button id="planSetPlus">+</button>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>目标重量 (kg)</label>
-        <input type="number" id="planTargetWeight" value="0" step="0.5">
+    <div id="planSetTableWrap">
+      <table class="set-table" id="planSetTable">
+        <thead>
+          <tr>
+            <th style="width:25%;text-align:left;">组</th>
+            <th style="width:38%;">重量 (kg)</th>
+            <th style="width:37%;">次数</th>
+          </tr>
+        </thead>
+        <tbody id="planSetTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="kb-wrap" id="planKbWrap">
+      <div class="kb-toolbar">
+        <div class="kb-focus-hint" id="planKbHint">正在输入：重量 (±0.25 kg)</div>
+        <button type="button" class="kb-dismiss" data-kb-dismiss="plan">收起键盘</button>
       </div>
-      <div class="form-group">
-        <label>目标次数</label>
-        <input type="number" id="planTargetReps" value="10">
+      <div class="kb-grid" id="planKbGrid">
+        <button class="kb-key" data-key="1">1</button>
+        <button class="kb-key" data-key="2">2</button>
+        <button class="kb-key" data-key="3">3</button>
+        <button class="kb-key fn" data-key="back">⌫</button>
+        <button class="kb-key" data-key="4">4</button>
+        <button class="kb-key" data-key="5">5</button>
+        <button class="kb-key" data-key="6">6</button>
+        <button class="kb-key adj" data-key="plus">+</button>
+        <button class="kb-key" data-key="7">7</button>
+        <button class="kb-key" data-key="8">8</button>
+        <button class="kb-key" data-key="9">9</button>
+        <button class="kb-key adj" data-key="minus">−</button>
+        <button class="kb-key fn" data-key="dot">.</button>
+        <button class="kb-key" data-key="0">0</button>
+        <button class="kb-key accent span2" data-key="confirm">确认</button>
       </div>
     </div>
     <div class="form-actions">
@@ -691,7 +1105,10 @@
     </div>
 
     <div class="kb-wrap" id="kbWrap">
-      <div class="kb-focus-hint" id="kbHint">正在输入：重量 (±0.25 kg)</div>
+      <div class="kb-toolbar">
+        <div class="kb-focus-hint" id="kbHint">正在输入：重量 (±0.25 kg)</div>
+        <button type="button" class="kb-dismiss" data-kb-dismiss="sheet">收起键盘</button>
+      </div>
       <div class="kb-grid" id="kbGrid">
         <button class="kb-key" data-key="1">1</button>
         <button class="kb-key" data-key="2">2</button>
@@ -986,6 +1403,7 @@ let editingId = null; // 编辑模式下的条目 id
 var currentCategory = CATEGORY_KEYS[0];
 var selectedExercise = '';
 var kbTarget = null;
+var kbClearOnInput = false;
 var currentSets = [];
 
 
@@ -1119,7 +1537,7 @@ function renderSetTable() {
     html += '<tr class="set-row' + doneClass + '">' +
       '<td><span class="set-type-tag' + typeClass + '" data-set="' + i + '">' + escapeHtml(label) + '</span></td>' +
       '<td><span class="last-data">' + lastText + '</span></td>' +
-      '<td><span class="num-cell" data-set="' + i + '" data-field="weight" tabindex="0">' + weightVal + '</span></td>' +
+      '<td>' + (i > 0 ? '<span class="cp-btn" data-set="' + i + '" title="复制上一组">↓</span>' : '') + '<span class="num-cell" data-set="' + i + '" data-field="weight" tabindex="0">' + weightVal + '</span></td>' +
       '<td><span class="num-cell" data-set="' + i + '" data-field="reps" tabindex="0">' + repsVal + '</span></td>' +
       '<td><span class="cb-cell' + cbClass + '" data-set="' + i + '">✓</span></td>' +
       '</tr>';
@@ -1152,6 +1570,18 @@ function bindSetTableEvents() {
       var si = parseInt(cb.dataset.set);
       if (currentSets[si]) {
         currentSets[si].done = !currentSets[si].done;
+        renderSetTable();
+      }
+    });
+  });
+
+  document.querySelectorAll('#setTableBody .cp-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var si = parseInt(btn.dataset.set);
+      if (si > 0 && currentSets[si] && currentSets[si - 1]) {
+        currentSets[si].weight = currentSets[si - 1].weight;
+        currentSets[si].reps = currentSets[si - 1].reps;
         renderSetTable();
       }
     });
@@ -1195,10 +1625,38 @@ function showTypePopup(tag) {
   }, 0);
 }
 
+function syncKbDockHeight(wrapEl) {
+  if (!wrapEl) return;
+  requestAnimationFrame(function() {
+    if (!wrapEl.classList.contains('show')) return;
+    document.documentElement.style.setProperty('--kb-dock-height', wrapEl.offsetHeight + 'px');
+  });
+}
+
+function clearKbDockHeight() {
+  var sheetKb = document.getElementById('kbWrap').classList.contains('show');
+  var trainKb = document.getElementById('trainingKbWrap').classList.contains('show');
+  if (!sheetKb && !trainKb) {
+    document.documentElement.style.removeProperty('--kb-dock-height');
+  }
+}
+
+function scrollKbTarget(el) {
+  if (!el) return;
+  requestAnimationFrame(function() {
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
+}
+
 function openKeyboard(cell) {
   var si = parseInt(cell.dataset.set);
   var field = cell.dataset.field;
+  var isNewCell = !kbTarget || kbTarget.setIndex !== si || kbTarget.field !== field;
   kbTarget = { setIndex: si, field: field };
+  if (isNewCell) {
+    var curVal = currentSets[si] && currentSets[si][field];
+    kbClearOnInput = !!(curVal && curVal !== 0);
+  }
 
   document.querySelectorAll('.num-cell.active').forEach(function(c) { c.classList.remove('active'); });
   cell.classList.add('active');
@@ -1210,13 +1668,21 @@ function openKeyboard(cell) {
     hint.textContent = '正在输入：次数 (步长 ±1 次)';
   }
 
-  document.getElementById('kbWrap').classList.add('show');
+  var wrap = document.getElementById('kbWrap');
+  wrap.classList.add('show');
+  overlay.classList.add('keyboard-open');
+  syncKbDockHeight(wrap);
+  scrollKbTarget(cell);
 }
 
 function closeKeyboard() {
-  document.getElementById('kbWrap').classList.remove('show');
+  var wrap = document.getElementById('kbWrap');
+  wrap.classList.remove('show');
+  overlay.classList.remove('keyboard-open');
   document.querySelectorAll('.num-cell.active').forEach(function(c) { c.classList.remove('active'); });
   kbTarget = null;
+  kbClearOnInput = false;
+  clearKbDockHeight();
 }
 
 function handleKBInput(value) {
@@ -1243,6 +1709,7 @@ function handleKBInput(value) {
     closeKeyboard();
   } else {
     var cur = String(set[kbTarget.field] || '');
+    if (kbClearOnInput) { cur = ''; kbClearOnInput = false; }
     if (cur === '0' && value !== '0') cur = '';
     if (cur === '' && value === '0') cur = '0';
     else cur = cur + value;
@@ -1270,6 +1737,23 @@ document.getElementById('kbGrid').addEventListener('click', function(e) {
 
 document.getElementById('kbWrap').addEventListener('click', function(e) {
   e.stopPropagation();
+});
+
+document.querySelectorAll('.kb-dismiss').forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var scope = btn.getAttribute('data-kb-dismiss');
+    if (scope === 'training') {
+      closeTrainingKeyboard();
+    } else if (scope === 'plan') {
+      closePlanKeyboard();
+    } else if (scope === 'bodyQuick') {
+      closeBodyQuickKeyboard();
+    } else {
+      closeKeyboard();
+    }
+  });
 });
 
 document.getElementById('setTableBody').addEventListener('mousedown', function(e) {
@@ -1334,15 +1818,24 @@ function openEditForm(entry) {
 document.getElementById('addBtn').addEventListener('click', openAddForm);
 
 document.getElementById('cancelAdd').addEventListener('click', () => {
+  closeKeyboard();
+  quickOverlayMode = false;
   overlay.classList.remove('show');
 });
 
 overlay.addEventListener('click', (e) => {
-  if (e.target === overlay) overlay.classList.remove('show');
+  if (e.target === overlay) {
+    closeKeyboard();
+    quickOverlayMode = false;
+    overlay.classList.remove('show');
+  }
 });
 
 document.getElementById('planExOverlay').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('show');
+  if (e.target === this) {
+    closePlanKeyboard();
+    this.classList.remove('show');
+  }
 });
 
 customInput.addEventListener('input', function() {
@@ -1354,6 +1847,7 @@ customInput.addEventListener('input', function() {
 
 // 提交
 document.getElementById('submitAdd').addEventListener('click', () => {
+  if (quickOverlayMode) return; // 快速训练模式单独处理
   var name = document.getElementById('exCustom').value.trim() || selectedExercise;
   if (!name) { alert('请选择或输入动作名称'); return; }
 
@@ -1384,6 +1878,7 @@ document.getElementById('submitAdd').addEventListener('click', () => {
   }
 
   save();
+  closeKeyboard();
   overlay.classList.remove('show');
   renderAll();
 });
@@ -1436,6 +1931,45 @@ function savePlans() {
   localStorage.setItem('fitness_plans', JSON.stringify(plans));
 }
 
+(function seedPresetPlans() {
+  if (Object.keys(plans).length > 0) return;
+  var presets = [
+    {
+      name: '推胸日',
+      exercises: [
+        { name: '卧推', sets: 4, targetWeight: 0, targetReps: 8, setDetails: [] },
+        { name: '上斜卧推', sets: 4, targetWeight: 0, targetReps: 8, setDetails: [] },
+        { name: '哑铃飞鸟', sets: 3, targetWeight: 0, targetReps: 10, setDetails: [] },
+        { name: '绳索夹胸', sets: 3, targetWeight: 0, targetReps: 12, setDetails: [] },
+        { name: '绳索下压', sets: 3, targetWeight: 0, targetReps: 10, setDetails: [] }
+      ]
+    },
+    {
+      name: '拉背日',
+      exercises: [
+        { name: '引体向上', sets: 4, targetWeight: 0, targetReps: 0, setDetails: [] },
+        { name: '划船', sets: 4, targetWeight: 0, targetReps: 8, setDetails: [] },
+        { name: '高位下拉', sets: 4, targetWeight: 0, targetReps: 10, setDetails: [] },
+        { name: '单臂哑铃划船', sets: 3, targetWeight: 0, targetReps: 10, setDetails: [] },
+        { name: '弯举', sets: 3, targetWeight: 0, targetReps: 10, setDetails: [] }
+      ]
+    },
+    {
+      name: '腿日',
+      exercises: [
+        { name: '深蹲', sets: 5, targetWeight: 0, targetReps: 8, setDetails: [] },
+        { name: '腿举', sets: 4, targetWeight: 0, targetReps: 10, setDetails: [] },
+        { name: '罗马尼亚硬拉', sets: 4, targetWeight: 0, targetReps: 8, setDetails: [] },
+        { name: '腿弯举', sets: 4, targetWeight: 0, targetReps: 10, setDetails: [] },
+        { name: '小腿提踵', sets: 4, targetWeight: 0, targetReps: 15, setDetails: [] }
+      ]
+    }
+  ];
+  presets.forEach(function(p) {
+    createPlan(p.name, p.exercises);
+  });
+})();
+
 function createPlan(name, exercises) {
   var id = 'plan_' + genId();
   var today = formatDate(new Date());
@@ -1475,18 +2009,52 @@ document.querySelectorAll('.tab-item').forEach(function(tab) {
     document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
     tab.classList.add('active');
     var target = tab.dataset.tab;
+
+    document.getElementById('bodyView').classList.remove('show');
+
     if (target === 'calendar') {
       document.getElementById('calendarView').classList.add('show');
       document.getElementById('calendarView').classList.remove('hide');
       document.getElementById('trainingView').classList.remove('show');
-    } else {
+      renderAll();
+    } else if (target === 'training') {
       document.getElementById('calendarView').classList.add('hide');
       document.getElementById('calendarView').classList.remove('show');
       document.getElementById('trainingView').classList.add('show');
-      showPlanList();
+      document.getElementById('bodyView').classList.remove('show');
+      restoreTrainingView();
+    } else if (target === 'body') {
+      document.getElementById('calendarView').classList.add('hide');
+      document.getElementById('calendarView').classList.remove('show');
+      document.getElementById('trainingView').classList.remove('show');
+      document.getElementById('bodyView').classList.add('show');
+      showBodyView();
     }
   });
 });
+
+function restoreTrainingView() {
+  if (trainingSession) {
+    document.getElementById('planListView').style.display = 'none';
+    document.getElementById('trainingExecView').style.display = 'block';
+    document.getElementById('trainingDoneView').style.display = 'none';
+    document.getElementById('quickTrainingView').style.display = 'none';
+    document.getElementById('planEditView').style.display = 'none';
+    updateTrainingUI();
+    return;
+  }
+  if (quickSession) {
+    document.getElementById('planListView').style.display = 'none';
+    document.getElementById('trainingExecView').style.display = 'none';
+    document.getElementById('trainingDoneView').style.display = 'none';
+    document.getElementById('quickTrainingView').style.display = 'block';
+    document.getElementById('planEditView').style.display = 'none';
+    updateQuickProgress();
+    renderQuickExList();
+    return;
+  }
+  showPlanList();
+}
 
 // === 计划列表 ===
 function showPlanList() {
@@ -1494,6 +2062,7 @@ function showPlanList() {
   document.getElementById('planEditView').style.display = 'none';
   document.getElementById('trainingExecView').style.display = 'none';
   document.getElementById('trainingDoneView').style.display = 'none';
+  document.getElementById('quickTrainingView').style.display = 'none';
 
   var list = document.getElementById('planList');
   var all = getPlansList();
@@ -1575,31 +2144,113 @@ function renderPlanExerciseList() {
     return;
   }
   container.innerHTML = exs.map(function(ex, i) {
-    return '<div class="plan-ex-item">' +
-      '<div class="order-btns">' +
-      '<button data-idx="' + i + '" data-dir="up">▲</button>' +
-      '<button data-idx="' + i + '" data-dir="down">▼</button>' +
-      '</div>' +
+    var detailHtml = '';
+    if (ex.setDetails && ex.setDetails.length > 0) {
+      detailHtml = ex.setDetails.map(function(s, si) {
+        var tag = s.type === 'warmup' ? '热' : s.type === 'dropset' ? '减' : (function() {
+          var n = 0;
+          for (var j = 0; j <= si; j++) {
+            if (ex.setDetails[j].type === 'normal') n++;
+          }
+          return n;
+        })();
+        var label = s.type !== 'normal' ? tag : '第' + tag + '组';
+        return '<span style="margin-right:4px;font-size:11px;color:#9ca3af;">' + label + ':' + (s.weight || 0) + '×' + (s.reps || 0) + '</span>';
+      }).join('');
+    } else {
+      detailHtml = ex.sets + '组 · 目标 ' + (ex.targetWeight || 0) + 'kg × ' + (ex.targetReps || 0) + '次';
+    }
+    return '<div class="plan-ex-item" draggable="true">' +
+      '<div class="drag-handle" data-idx="' + i + '">⋮⋮</div>' +
       '<div class="ex-info">' +
       '<div class="ex-name">' + escapeHtml(ex.name) + '</div>' +
-      '<div class="ex-detail">' + ex.sets + '组 · 目标 ' + ex.targetWeight + 'kg × ' + ex.targetReps + '次</div>' +
+      '<div class="ex-detail">' + detailHtml + '</div>' +
       '</div>' +
+      '<button class="edit-btn" data-idx="' + i + '">✎</button>' +
       '<button class="del-btn" data-idx="' + i + '">×</button>' +
       '</div>';
   }).join('');
 
-  container.querySelectorAll('[data-dir]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var idx = parseInt(btn.dataset.idx);
-      var dir = btn.dataset.dir;
+  // 拖拽排序
+  var items = container.querySelectorAll('.plan-ex-item');
+  var dragSrcIndex = null;
+
+  items.forEach(function(item) {
+    item.addEventListener('dragstart', function(e) {
+      dragSrcIndex = parseInt(item.querySelector('.drag-handle').dataset.idx);
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragSrcIndex.toString());
+    });
+
+    item.addEventListener('dragend', function() {
+      item.classList.remove('dragging');
+      container.querySelectorAll('.plan-ex-item').forEach(function(it) { it.classList.remove('drag-over'); });
+      dragSrcIndex = null;
+    });
+
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      var targetIdx = parseInt(item.querySelector('.drag-handle').dataset.idx);
+      if (dragSrcIndex === null || dragSrcIndex === targetIdx) return;
+      container.querySelectorAll('.plan-ex-item').forEach(function(it) { it.classList.remove('drag-over'); });
+      item.classList.add('drag-over');
+    });
+
+    item.addEventListener('dragleave', function() {
+      item.classList.remove('drag-over');
+    });
+
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      item.classList.remove('drag-over');
+      var targetIdx = parseInt(item.querySelector('.drag-handle').dataset.idx);
+      if (dragSrcIndex === null || dragSrcIndex === targetIdx) return;
       var exs = getPlanExercises();
-      if (dir === 'up' && idx > 0) {
-        var tmp = exs[idx - 1]; exs[idx - 1] = exs[idx]; exs[idx] = tmp;
-      } else if (dir === 'down' && idx < exs.length - 1) {
-        var tmp = exs[idx + 1]; exs[idx + 1] = exs[idx]; exs[idx] = tmp;
-      }
+      var moved = exs.splice(dragSrcIndex, 1)[0];
+      exs.splice(targetIdx, 0, moved);
       setPlanExercises(exs);
       renderPlanExerciseList();
+      dragSrcIndex = null;
+    });
+
+    // 移动端触摸拖拽
+    item.addEventListener('touchstart', function(e) {
+      if (!e.target.closest('.drag-handle')) return;
+      dragSrcIndex = parseInt(item.querySelector('.drag-handle').dataset.idx);
+      item.classList.add('dragging');
+    }, { passive: false });
+
+    item.addEventListener('touchmove', function(e) {
+      if (dragSrcIndex === null) return;
+      e.preventDefault();
+      container.querySelectorAll('.plan-ex-item').forEach(function(it) { it.classList.remove('drag-over'); });
+      var touch = e.touches[0];
+      var targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      var targetItem = targetEl ? targetEl.closest('.plan-ex-item') : null;
+      if (targetItem && parseInt(targetItem.querySelector('.drag-handle').dataset.idx) !== dragSrcIndex) {
+        targetItem.classList.add('drag-over');
+      }
+    }, { passive: false });
+
+    item.addEventListener('touchend', function() {
+      if (dragSrcIndex === null) return;
+      item.classList.remove('dragging');
+      var targetItem = container.querySelector('.plan-ex-item.drag-over');
+      if (targetItem) {
+        var targetIdx = parseInt(targetItem.querySelector('.drag-handle').dataset.idx);
+        if (dragSrcIndex !== targetIdx) {
+          var exs = getPlanExercises();
+          var moved = exs.splice(dragSrcIndex, 1)[0];
+          exs.splice(targetIdx, 0, moved);
+          setPlanExercises(exs);
+          renderPlanExerciseList();
+        }
+      }
+      container.querySelectorAll('.plan-ex-item').forEach(function(it) { it.classList.remove('drag-over'); });
+      dragSrcIndex = null;
     });
   });
 
@@ -1609,6 +2260,13 @@ function renderPlanExerciseList() {
       exs.splice(parseInt(btn.dataset.idx), 1);
       setPlanExercises(exs);
       renderPlanExerciseList();
+    });
+  });
+
+  container.querySelectorAll('.edit-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      editPlanExercise(parseInt(btn.dataset.idx));
     });
   });
 }
@@ -1637,6 +2295,36 @@ document.getElementById('newPlanBtn').addEventListener('click', function() {
 
 // === 训练执行 ===
 var trainingSession = null;
+var trainingTimerInterval = null;
+var trainingStartTime = null;
+
+function startTrainingTimer() {
+  trainingStartTime = Date.now();
+  if (trainingTimerInterval) clearInterval(trainingTimerInterval);
+  trainingTimerInterval = setInterval(updateTrainingTimer, 1000);
+  updateTrainingTimer();
+}
+
+function stopTrainingTimer() {
+  if (trainingTimerInterval) { clearInterval(trainingTimerInterval); trainingTimerInterval = null; }
+  trainingStartTime = null;
+  var timerEl = document.getElementById('trainingTimer');
+  var quickTimerEl = document.getElementById('quickTimer');
+  if (timerEl) timerEl.textContent = '';
+  if (quickTimerEl) quickTimerEl.textContent = '';
+}
+
+function updateTrainingTimer() {
+  if (!trainingStartTime) return;
+  var elapsed = Math.floor((Date.now() - trainingStartTime) / 1000);
+  var mins = Math.floor(elapsed / 60);
+  var secs = elapsed % 60;
+  var str = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  var timerEl = document.getElementById('trainingTimer');
+  var quickTimerEl = document.getElementById('quickTimer');
+  if (timerEl) timerEl.textContent = str;
+  if (quickTimerEl) quickTimerEl.textContent = str;
+}
 
 function startTraining(planId) {
   var plan = plans[planId];
@@ -1648,13 +2336,11 @@ function startTraining(planId) {
     planId: planId,
     plan: plan,
     currentExIndex: 0,
-    currentSetIndex: 0,
-    currentSetType: 'normal',
-    currentWeight: plan.exercises[0].targetWeight,
-    currentReps: plan.exercises[0].targetReps,
+    currentSets: [],
     completedSets: [],
     paused: false
   };
+  initTrainingSets();
 
   document.getElementById('planListView').style.display = 'none';
   document.getElementById('trainingExecView').style.display = 'block';
@@ -1662,6 +2348,22 @@ function startTraining(planId) {
 
   document.getElementById('trainingPlanName').textContent = plan.name;
   updateTrainingUI();
+  startTrainingTimer();
+}
+
+function initTrainingSets() {
+  var ex = getCurrentExercise();
+  if (!ex) return;
+  trainingSession.currentSets = [];
+  for (var i = 0; i < ex.sets; i++) {
+    var detail = (ex.setDetails && ex.setDetails[i]) || {};
+    trainingSession.currentSets.push({
+      reps: detail.reps || ex.targetReps || 0,
+      weight: detail.weight || ex.targetWeight || 0,
+      type: detail.type || 'normal',
+      done: false
+    });
+  }
 }
 
 function getCurrentExercise() {
@@ -1688,68 +2390,164 @@ function updateTrainingUI() {
 
   if (ex) {
     document.getElementById('currentExName').textContent = ex.name;
-    document.getElementById('currentSetInfo').textContent =
-      '第 ' + (s.currentSetIndex + 1) + ' 组（共 ' + ex.sets + ' 组）· 目标 ' + ex.targetWeight + 'kg × ' + ex.targetReps + '次';
-    document.getElementById('trainingWeightVal').textContent = s.currentWeight;
-    document.getElementById('trainingRepsVal').textContent = s.currentReps;
+    var infoText = '';
+    if (ex.setDetails && ex.setDetails.length > 0) {
+      infoText = ex.setDetails.map(function(s, si) {
+        var tag = s.type === 'warmup' ? '热' : s.type === 'dropset' ? '减' : (si + 1);
+        return tag + ':' + (s.weight || 0) + '×' + (s.reps || 0);
+      }).join(' | ') + ' · 共 ' + ex.sets + ' 组';
+    } else {
+      infoText = '目标 ' + ex.targetWeight + 'kg × ' + ex.targetReps + '次 · 共 ' + ex.sets + ' 组';
+    }
+    document.getElementById('currentSetInfo').textContent = infoText;
   }
 
-  document.querySelectorAll('#trainingExecView .st-btn').forEach(function(btn) {
-    btn.classList.toggle('sel', btn.dataset.tt === s.currentSetType);
+  renderTrainingSetTable();
+}
+
+function renderTrainingSetTable() {
+  var tbody = document.getElementById('trainingSetTableBody');
+  var sets = trainingSession.currentSets;
+  var ex = getCurrentExercise();
+  var lastSets = null;
+  if (ex) {
+    lastSets = getLastExerciseData(ex.name, selectedDate);
+  }
+
+  var html = '';
+  for (var i = 0; i < sets.length; i++) {
+    var set = sets[i];
+    var typeClass = getSetTypeClass(sets, i);
+    var label = getSetLabel(sets, i);
+    var doneClass = set.done ? ' done-row' : '';
+    var cbClass = set.done ? ' done' : '';
+
+    var lastText = '—';
+    if (lastSets && lastSets[i]) {
+      var ls = lastSets[i];
+      lastText = ls.weight + '×' + ls.reps;
+    }
+
+    var weightVal = set.weight || '';
+    var repsVal = set.reps || '';
+
+    html += '<tr class="set-row' + doneClass + '">' +
+      '<td><span class="set-type-tag' + typeClass + '" data-set="' + i + '">' + escapeHtml(label) + '</span></td>' +
+      '<td><span class="last-data">' + lastText + '</span></td>' +
+      '<td>' + (i > 0 ? '<span class="cp-btn" data-set="' + i + '" title="复制上一组">↓</span>' : '') + '<span class="num-cell" data-set="' + i + '" data-field="weight" tabindex="0">' + weightVal + '</span></td>' +
+      '<td><span class="num-cell" data-set="' + i + '" data-field="reps" tabindex="0">' + repsVal + '</span></td>' +
+      '<td><span class="cb-cell' + cbClass + '" data-set="' + i + '">✓</span></td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+
+  bindTrainingSetTableEvents();
+}
+
+function bindTrainingSetTableEvents() {
+  document.querySelectorAll('#trainingSetTableBody .set-type-tag').forEach(function(tag) {
+    tag.addEventListener('click', function(e) {
+      e.stopPropagation();
+      showTrainingTypePopup(tag);
+    });
+  });
+
+  document.querySelectorAll('#trainingSetTableBody .num-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      openTrainingKeyboard(cell);
+    });
+    cell.addEventListener('focus', function() {
+      openTrainingKeyboard(cell);
+    });
+  });
+
+  document.querySelectorAll('#trainingSetTableBody .cb-cell').forEach(function(cb) {
+    cb.addEventListener('click', function() {
+      var si = parseInt(cb.dataset.set);
+      if (trainingSession.currentSets[si]) {
+        trainingSession.currentSets[si].done = !trainingSession.currentSets[si].done;
+        renderTrainingSetTable();
+      }
+    });
+  });
+
+  document.querySelectorAll('#trainingSetTableBody .cp-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var si = parseInt(btn.dataset.set);
+      if (si > 0 && trainingSession.currentSets[si] && trainingSession.currentSets[si - 1]) {
+        trainingSession.currentSets[si].weight = trainingSession.currentSets[si - 1].weight;
+        trainingSession.currentSets[si].reps = trainingSession.currentSets[si - 1].reps;
+        renderTrainingSetTable();
+      }
+    });
   });
 }
 
-document.getElementById('trainingComplete').addEventListener('click', function() {
-  var s = trainingSession;
-  if (!s) return;
-  var ex = getCurrentExercise();
-  if (!ex) return;
-
-  s.completedSets.push({
-    exercise: ex.name,
-    setIndex: s.currentSetIndex,
-    reps: s.currentReps,
-    weight: s.currentWeight,
-    type: s.currentSetType
+function showTrainingTypePopup(tag) {
+  document.querySelectorAll('#trainingSetTableBody .type-popup.show').forEach(function(p) {
+    p.classList.remove('show');
   });
 
-  s.currentSetIndex++;
-  if (s.currentSetIndex >= ex.sets) {
-    s.currentSetIndex = 0;
-    s.currentExIndex++;
+  var si = parseInt(tag.dataset.set);
+  var popup = tag.querySelector('.type-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.className = 'type-popup show';
+    popup.innerHTML = '<div data-type="normal">正式组</div><div data-type="warmup">热身组</div><div data-type="dropset">递减组</div>';
+    tag.appendChild(popup);
 
-    if (s.currentExIndex >= s.plan.exercises.length) {
-      finishTraining();
-      return;
-    }
-    var nextEx = getCurrentExercise();
-    s.currentWeight = nextEx.targetWeight;
-    s.currentReps = nextEx.targetReps;
-    s.currentSetType = 'normal';
+    popup.querySelectorAll('div').forEach(function(div) {
+      div.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var newType = div.dataset.type;
+        if (trainingSession.currentSets[si]) {
+          trainingSession.currentSets[si].type = newType;
+        }
+        popup.remove();
+        renderTrainingSetTable();
+      });
+    });
+  } else {
+    popup.classList.toggle('show');
   }
 
-  updateTrainingUI();
-});
+  setTimeout(function() {
+    document.addEventListener('click', function closePopup() {
+      var p = tag.querySelector('.type-popup');
+      if (p) p.classList.remove('show');
+      document.removeEventListener('click', closePopup);
+    }, { once: true });
+  }, 0);
+}
 
-document.getElementById('trainingSkip').addEventListener('click', function() {
+document.getElementById('trainingSaveAndNext').addEventListener('click', function() {
   var s = trainingSession;
   if (!s) return;
   var ex = getCurrentExercise();
   if (!ex) return;
 
-  s.currentSetIndex++;
-  if (s.currentSetIndex >= ex.sets) {
-    s.currentSetIndex = 0;
-    s.currentExIndex++;
-    if (s.currentExIndex >= s.plan.exercises.length) {
-      finishTraining();
-      return;
+  closeTrainingKeyboard();
+
+  s.currentSets.forEach(function(set, i) {
+    if (set.reps > 0 || set.weight > 0 || set.done) {
+      s.completedSets.push({
+        exercise: ex.name,
+        setIndex: i,
+        reps: set.reps,
+        weight: set.weight,
+        type: set.type,
+        done: set.done
+      });
     }
-    var nextEx = getCurrentExercise();
-    s.currentWeight = nextEx.targetWeight;
-    s.currentReps = nextEx.targetReps;
-    s.currentSetType = 'normal';
+  });
+
+  s.currentExIndex++;
+  if (s.currentExIndex >= s.plan.exercises.length) {
+    finishTraining();
+    return;
   }
+  initTrainingSets();
   updateTrainingUI();
 });
 
@@ -1769,6 +2567,7 @@ function finishTraining() {
 
   saveCompletedSetsToCalendar();
   trainingSession = null;
+  stopTrainingTimer();
 }
 
 function saveCompletedSetsToCalendar() {
@@ -1806,73 +2605,93 @@ document.getElementById('doneBackToCalendar').addEventListener('click', function
 
 // === 训练键盘 ===
 var trainingKbTarget = null;
+var trainingKbClearOnInput = false;
 
-document.getElementById('trainingWeightCell').addEventListener('click', function() {
-  trainingKbTarget = 'weight';
-  document.getElementById('trainingWeightCell').classList.add('active');
-  document.getElementById('trainingRepsCell').classList.remove('active');
-  document.getElementById('trainingKbHint').textContent = '正在输入：重量 (步长 ±0.25 kg)';
-  document.getElementById('trainingKbWrap').style.display = 'block';
-});
+function closeTrainingKeyboard() {
+  var wrap = document.getElementById('trainingKbWrap');
+  wrap.classList.remove('show');
+  document.getElementById('trainingExecView').classList.remove('keyboard-open');
+  document.querySelectorAll('#trainingSetTableBody .num-cell.active').forEach(function(c) { c.classList.remove('active'); });
+  trainingKbTarget = null;
+  trainingKbClearOnInput = false;
+  clearKbDockHeight();
+}
 
-document.getElementById('trainingRepsCell').addEventListener('click', function() {
-  trainingKbTarget = 'reps';
-  document.getElementById('trainingRepsCell').classList.add('active');
-  document.getElementById('trainingWeightCell').classList.remove('active');
-  document.getElementById('trainingKbHint').textContent = '正在输入：次数 (步长 ±1 次)';
-  document.getElementById('trainingKbWrap').style.display = 'block';
-});
+function openTrainingKeyboard(cell) {
+  var si = parseInt(cell.dataset.set);
+  var field = cell.dataset.field;
+  var isNewCell = !trainingKbTarget || trainingKbTarget.setIndex !== si || trainingKbTarget.field !== field;
+  trainingKbTarget = { setIndex: si, field: field };
+  if (isNewCell) {
+    var curVal = trainingSession.currentSets[si] && trainingSession.currentSets[si][field];
+    trainingKbClearOnInput = !!(curVal && curVal !== 0);
+  }
+
+  document.querySelectorAll('#trainingSetTableBody .num-cell.active').forEach(function(c) { c.classList.remove('active'); });
+  cell.classList.add('active');
+
+  document.getElementById('trainingKbHint').textContent = field === 'weight'
+    ? '正在输入：重量 (步长 ±0.25 kg)'
+    : '正在输入：次数 (步长 ±1 次)';
+
+  var wrap = document.getElementById('trainingKbWrap');
+  wrap.classList.add('show');
+  document.getElementById('trainingExecView').classList.add('keyboard-open');
+  syncKbDockHeight(wrap);
+  scrollKbTarget(cell);
+}
 
 document.getElementById('trainingKbGrid').addEventListener('click', function(e) {
   var key = e.target.closest('.kb-key');
   if (!key || !trainingKbTarget || !trainingSession) return;
+  e.preventDefault();
   var val = key.dataset.key;
-  var cur = trainingKbTarget === 'weight' ? trainingSession.currentWeight : trainingSession.currentReps;
+  var si = trainingKbTarget.setIndex;
+  var field = trainingKbTarget.field;
+  var set = trainingSession.currentSets[si];
+  if (!set) return;
 
   if (val === 'back') {
-    var str = String(cur);
-    cur = str.length > 1 ? parseFloat(str.slice(0, -1)) || 0 : 0;
+    var str = String(set[field] || '');
+    set[field] = str.length > 1 ? parseFloat(str.slice(0, -1)) || 0 : 0;
   } else if (val === 'dot') {
-    if (trainingKbTarget === 'weight') {
-      var str = String(cur);
-      if (str.indexOf('.') < 0) cur = str + '.';
+    if (field === 'weight') {
+      var str = String(set[field] || '0');
+      if (str.indexOf('.') < 0) set[field] = str + '.';
     }
   } else if (val === 'plus') {
-    var step = trainingKbTarget === 'weight' ? 0.25 : 1;
-    cur = trainingKbTarget === 'weight' ? Math.round((cur + step) * 100) / 100 : Math.round(cur + step);
+    var step = field === 'weight' ? 0.25 : 1;
+    set[field] = roundVal((set[field] || 0) + step, field);
   } else if (val === 'minus') {
-    var step = trainingKbTarget === 'weight' ? 0.25 : 1;
-    cur = trainingKbTarget === 'weight' ? Math.round(Math.max(0, cur - step) * 100) / 100 : Math.max(0, Math.round(cur - step));
+    var step = field === 'weight' ? 0.25 : 1;
+    set[field] = roundVal(Math.max(0, (set[field] || 0) - step), field);
   } else if (val === 'confirm') {
-    document.getElementById('trainingKbWrap').style.display = 'none';
-    document.getElementById('trainingWeightCell').classList.remove('active');
-    document.getElementById('trainingRepsCell').classList.remove('active');
-    trainingKbTarget = null;
+    closeTrainingKeyboard();
     return;
   } else {
-    var str = String(cur);
-    if (str === '0' && val !== '0') str = '';
-    if (str === '' && val === '0') str = '0';
-    else str = str + val;
-    cur = parseFloat(str) || 0;
+    var cur = String(set[field] || '');
+    if (trainingKbClearOnInput) { cur = ''; trainingKbClearOnInput = false; }
+    if (cur === '0' && val !== '0') cur = '';
+    if (cur === '' && val === '0') cur = '0';
+    else cur = cur + val;
+    set[field] = parseFloat(cur) || 0;
   }
 
-  if (trainingKbTarget === 'weight') {
-    trainingSession.currentWeight = Math.round(cur * 100) / 100;
-    document.getElementById('trainingWeightVal').textContent = trainingSession.currentWeight;
-  } else {
-    trainingSession.currentReps = cur;
-    document.getElementById('trainingRepsVal').textContent = trainingSession.currentReps;
+  renderTrainingSetTable();
+  var cell = document.querySelector('#trainingSetTableBody .num-cell[data-set="' + si + '"][data-field="' + field + '"]');
+  if (cell) { cell.classList.add('active'); cell.focus(); }
+});
+
+document.getElementById('trainingSetTableBody').addEventListener('mousedown', function(e) {
+  var cell = e.target.closest('.num-cell');
+  if (cell) {
+    e.preventDefault();
+    cell.focus();
   }
 });
 
-// === 训练组类型切换 ===
-document.querySelectorAll('#trainingExecView .st-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    if (!trainingSession) return;
-    trainingSession.currentSetType = btn.dataset.tt;
-    updateTrainingUI();
-  });
+document.getElementById('trainingKbWrap').addEventListener('click', function(e) {
+  e.stopPropagation();
 });
 
 // === 暂停 ===
@@ -1882,43 +2701,315 @@ document.getElementById('trainingPause').addEventListener('click', function() {
   this.textContent = trainingSession.paused ? '▶ 继续' : '⏸ 暂停';
 });
 
+document.getElementById('trainingEndBtn').addEventListener('click', function() {
+  if (!trainingSession) return;
+  if (!confirm('确定要结束训练吗？\n\n已完成的动作组将保存到日历，未完成的将丢弃。')) return;
+  var s = trainingSession;
+  var ex = getCurrentExercise();
+  if (ex) {
+    s.currentSets.forEach(function(set, i) {
+      if (set.reps > 0 || set.weight > 0 || set.done) {
+        s.completedSets.push({
+          exercise: ex.name, setIndex: i,
+          reps: set.reps, weight: set.weight, type: set.type, done: set.done
+        });
+      }
+    });
+  }
+  saveCompletedSetsToCalendar();
+  stopTrainingTimer();
+  trainingSession = null;
+  closeTrainingKeyboard();
+  showPlanList();
+});
+
 // === 计划动作选择器 ===
 var planExSelected = '';
 var planExCategory = CATEGORY_KEYS[0];
 var planSetNum = 3;
+var planEditingIndex = null;
+var planSetDetails = [];
+var planKbTarget = null;
+var planKbClearOnInput = false;
+
+function initPlanSetDetails(count, defaults) {
+  planSetDetails = [];
+  for (var i = 0; i < count; i++) {
+    var def = (defaults && defaults[i]) || { weight: 0, reps: 10, type: 'normal' };
+    planSetDetails.push({ weight: def.weight || 0, reps: def.reps || 10, type: def.type || 'normal' });
+  }
+}
+
+function renderPlanSetTable() {
+  var tbody = document.getElementById('planSetTableBody');
+  var html = '';
+  for (var i = 0; i < planSetNum; i++) {
+    var set = planSetDetails[i] || { weight: 0, reps: 10, type: 'normal' };
+    var typeClass = getSetTypeClass(planSetDetails, i);
+    var label = getSetLabel(planSetDetails, i);
+    var weightVal = set.weight || '';
+    var repsVal = set.reps || '';
+
+    html += '<tr class="set-row">' +
+      '<td><span class="set-type-tag' + typeClass + '" data-set="' + i + '">' + escapeHtml(label) + '</span></td>' +
+      '<td>' + (i > 0 ? '<span class="cp-btn" data-set="' + i + '" title="复制上一组">↓</span>' : '') + '<span class="num-cell" data-set="' + i + '" data-field="weight" tabindex="0">' + weightVal + '</span></td>' +
+      '<td><span class="num-cell" data-set="' + i + '" data-field="reps" tabindex="0">' + repsVal + '</span></td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+  bindPlanSetTableEvents();
+}
+
+function bindPlanSetTableEvents() {
+  document.querySelectorAll('#planSetTableBody .set-type-tag').forEach(function(tag) {
+    tag.addEventListener('click', function(e) {
+      e.stopPropagation();
+      showPlanTypePopup(tag);
+    });
+  });
+
+  document.querySelectorAll('#planSetTableBody .num-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      openPlanKeyboard(cell);
+    });
+    cell.addEventListener('focus', function() {
+      openPlanKeyboard(cell);
+    });
+  });
+
+  document.querySelectorAll('#planSetTableBody .cp-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var si = parseInt(btn.dataset.set);
+      if (si > 0 && planSetDetails[si] && planSetDetails[si - 1]) {
+        planSetDetails[si].weight = planSetDetails[si - 1].weight;
+        planSetDetails[si].reps = planSetDetails[si - 1].reps;
+        renderPlanSetTable();
+      }
+    });
+  });
+}
+
+function showPlanTypePopup(tag) {
+  document.querySelectorAll('#planSetTableBody .type-popup.show').forEach(function(p) {
+    p.classList.remove('show');
+  });
+
+  var si = parseInt(tag.dataset.set);
+  var popup = tag.querySelector('.type-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.className = 'type-popup show';
+    popup.innerHTML = '<div data-type="normal">正式组</div><div data-type="warmup">热身组</div><div data-type="dropset">递减组</div>';
+    tag.appendChild(popup);
+
+    popup.querySelectorAll('div').forEach(function(div) {
+      div.addEventListener('click', function(e2) {
+        e2.stopPropagation();
+        if (planSetDetails[si]) planSetDetails[si].type = div.dataset.type;
+        popup.remove();
+        renderPlanSetTable();
+      });
+    });
+  } else {
+    popup.classList.toggle('show');
+  }
+
+  setTimeout(function() {
+    document.addEventListener('click', function closePopup() {
+      var p = tag.querySelector('.type-popup');
+      if (p) p.classList.remove('show');
+      document.removeEventListener('click', closePopup);
+    }, { once: true });
+  }, 0);
+}
+
+function openPlanKeyboard(cell) {
+  var si = parseInt(cell.dataset.set);
+  var field = cell.dataset.field;
+  var isNewCell = !planKbTarget || planKbTarget.setIndex !== si || planKbTarget.field !== field;
+  planKbTarget = { setIndex: si, field: field };
+  if (isNewCell) {
+    var curVal = planSetDetails[si] && planSetDetails[si][field];
+    planKbClearOnInput = !!(curVal && curVal !== 0);
+  }
+
+  document.querySelectorAll('#planSetTableBody .num-cell.active').forEach(function(c) {
+    c.classList.remove('active');
+  });
+  cell.classList.add('active');
+
+  document.getElementById('planKbHint').textContent = field === 'weight'
+    ? '正在输入：重量 (步长 ±0.25 kg)'
+    : '正在输入：次数 (步长 ±1 次)';
+
+  var wrap = document.getElementById('planKbWrap');
+  wrap.classList.add('show');
+  document.getElementById('planExOverlay').classList.add('keyboard-open');
+  syncKbDockHeight(wrap);
+  scrollKbTarget(cell);
+}
+
+function closePlanKeyboard() {
+  var wrap = document.getElementById('planKbWrap');
+  wrap.classList.remove('show');
+  document.getElementById('planExOverlay').classList.remove('keyboard-open');
+  document.querySelectorAll('#planSetTableBody .num-cell.active').forEach(function(c) {
+    c.classList.remove('active');
+  });
+  planKbTarget = null;
+  planKbClearOnInput = false;
+  clearKbDockHeight();
+}
 
 document.getElementById('planAddExercise').addEventListener('click', function() {
+  planEditingIndex = null;
   planExSelected = '';
   planExCategory = CATEGORY_KEYS[0];
   planSetNum = 3;
+  closePlanKeyboard();
+  initPlanSetDetails(3, null);
   document.getElementById('planSetCount').textContent = '3';
-  document.getElementById('planTargetWeight').value = '0';
-  document.getElementById('planTargetReps').value = '10';
+  document.getElementById('planExTitle').textContent = '添加动作到计划';
   renderPlanCatTabs();
   renderPlanExGrid();
+  renderPlanSetTable();
   document.getElementById('planExOverlay').classList.add('show');
 });
 
+function editPlanExercise(index) {
+  planEditingIndex = index;
+  closePlanKeyboard();
+  var exs = getPlanExercises();
+  var ex = exs[index];
+  if (!ex) return;
+
+  planExSelected = ex.name;
+  planSetNum = ex.sets;
+
+  var foundCat = null;
+  for (var c = 0; c < CATEGORY_KEYS.length; c++) {
+    if (CATEGORIES[CATEGORY_KEYS[c]].indexOf(ex.name) >= 0) {
+      foundCat = CATEGORY_KEYS[c];
+      break;
+    }
+  }
+  planExCategory = foundCat || CATEGORY_KEYS[0];
+
+  initPlanSetDetails(ex.sets, ex.setDetails || []);
+  document.getElementById('planSetCount').textContent = ex.sets;
+  document.getElementById('planExTitle').textContent = '编辑动作';
+  renderPlanCatTabs();
+  renderPlanExGrid();
+  renderPlanSetTable();
+  document.getElementById('planExOverlay').classList.add('show');
+}
+
 document.getElementById('planSetMinus').addEventListener('click', function() {
-  if (planSetNum > 1) { planSetNum--; document.getElementById('planSetCount').textContent = planSetNum; }
+  if (planSetNum > 1) {
+    planSetNum--;
+    initPlanSetDetails(planSetNum, planSetDetails);
+    document.getElementById('planSetCount').textContent = planSetNum;
+    renderPlanSetTable();
+  }
 });
 document.getElementById('planSetPlus').addEventListener('click', function() {
-  if (planSetNum < 20) { planSetNum++; document.getElementById('planSetCount').textContent = planSetNum; }
+  if (planSetNum < 20) {
+    planSetNum++;
+    initPlanSetDetails(planSetNum, planSetDetails);
+    document.getElementById('planSetCount').textContent = planSetNum;
+    renderPlanSetTable();
+  }
 });
 
 document.getElementById('planExConfirm').addEventListener('click', function() {
   if (!planExSelected) { alert('请选择一个动作'); return; }
-  var w = parseFloat(document.getElementById('planTargetWeight').value) || 0;
-  var r = parseInt(document.getElementById('planTargetReps').value) || 0;
+
+  var firstNormal = null;
+  for (var i = 0; i < planSetDetails.length; i++) {
+    if (planSetDetails[i].type === 'normal') { firstNormal = planSetDetails[i]; break; }
+  }
+  if (!firstNormal) firstNormal = planSetDetails[0];
+
+  var entry = {
+    name: planExSelected,
+    sets: planSetNum,
+    targetWeight: firstNormal.weight || 0,
+    targetReps: firstNormal.reps || 0,
+    setDetails: planSetDetails.map(function(s) {
+      return { weight: s.weight, reps: s.reps, type: s.type };
+    })
+  };
+
   var exs = getPlanExercises();
-  exs.push({ name: planExSelected, sets: planSetNum, targetWeight: w, targetReps: r });
+  if (planEditingIndex !== null) {
+    exs[planEditingIndex] = entry;
+  } else {
+    exs.push(entry);
+  }
   setPlanExercises(exs);
   renderPlanExerciseList();
+  closePlanKeyboard();
   document.getElementById('planExOverlay').classList.remove('show');
 });
 
 document.getElementById('planExCancel').addEventListener('click', function() {
+  closePlanKeyboard();
   document.getElementById('planExOverlay').classList.remove('show');
+});
+
+// plan keyboard input
+document.getElementById('planKbGrid').addEventListener('click', function(e) {
+  var key = e.target.closest('.kb-key');
+  if (!key || !planKbTarget) return;
+  e.preventDefault();
+  var val = key.dataset.key;
+  var si = planKbTarget.setIndex;
+  var field = planKbTarget.field;
+  var set = planSetDetails[si];
+  if (!set) return;
+
+  if (val === 'back') {
+    var str = String(set[field] || '');
+    set[field] = str.length > 1 ? parseFloat(str.slice(0, -1)) || 0 : 0;
+  } else if (val === 'dot') {
+    if (field === 'weight') {
+      var str = String(set[field] || '0');
+      if (str.indexOf('.') < 0) set[field] = str + '.';
+    }
+  } else if (val === 'plus') {
+    var step = field === 'weight' ? 0.25 : 1;
+    set[field] = roundVal((set[field] || 0) + step, field);
+  } else if (val === 'minus') {
+    var step = field === 'weight' ? 0.25 : 1;
+    set[field] = roundVal(Math.max(0, (set[field] || 0) - step), field);
+  } else if (val === 'confirm') {
+    closePlanKeyboard();
+    return;
+  } else {
+    var cur = String(set[field] || '');
+    if (planKbClearOnInput) { cur = ''; planKbClearOnInput = false; }
+    if (cur === '0' && val !== '0') cur = '';
+    if (cur === '' && val === '0') cur = '0';
+    else cur = cur + val;
+    set[field] = parseFloat(cur) || 0;
+  }
+
+  renderPlanSetTable();
+  var cell = document.querySelector('#planSetTableBody .num-cell[data-set="' + si + '"][data-field="' + field + '"]');
+  if (cell) { cell.classList.add('active'); cell.focus(); }
+});
+
+document.getElementById('planKbWrap').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+document.getElementById('planSetTableBody').addEventListener('mousedown', function(e) {
+  var cell = e.target.closest('.num-cell');
+  if (cell) {
+    e.preventDefault();
+    cell.focus();
+  }
 });
 
 function renderPlanCatTabs() {
@@ -1947,6 +3038,719 @@ function renderPlanExGrid() {
     tile.addEventListener('click', function() {
       planExSelected = tile.dataset.name;
       renderPlanExGrid();
+    });
+  });
+}
+
+// === 快速训练 ===
+var quickSession = null;
+var quickOverlayMode = false;
+
+// 快速开始按钮
+document.getElementById('quickStartBtn').addEventListener('click', function() {
+  quickSession = {
+    exercises: [],
+    startTime: new Date()
+  };
+  document.getElementById('planListView').style.display = 'none';
+  document.getElementById('quickTrainingView').style.display = 'block';
+  updateQuickProgress();
+  renderQuickExList();
+  startTrainingTimer();
+});
+
+document.getElementById('quickTrainingBack').addEventListener('click', function() {
+  showPlanList();
+});
+
+document.getElementById('quickEndBtn').addEventListener('click', function() {
+  if (!quickSession || quickSession.exercises.length === 0) {
+    quickSession = null;
+    stopTrainingTimer();
+    showPlanList();
+    return;
+  }
+  if (!confirm('确定要结束快速训练吗？\n\n已录入的动作将保存到日历，未完成的将丢弃。')) return;
+  quickSession.exercises.forEach(function(ex) {
+    var volume = ex.sets.reduce(function(sum, s) { return sum + s.reps * s.weight; }, 0);
+    var entry = { id: genId(), name: ex.name, sets: ex.sets, volume: volume };
+    if (!data[selectedDate]) data[selectedDate] = [];
+    data[selectedDate].push(entry);
+  });
+  save();
+  renderAll();
+  quickSession = null;
+  stopTrainingTimer();
+  document.getElementById('quickTrainingView').style.display = 'none';
+  showPlanList();
+});
+
+function updateQuickProgress() {
+  if (!quickSession) return;
+  var totalSets = 0;
+  var doneSets = 0;
+  quickSession.exercises.forEach(function(ex) {
+    ex.sets.forEach(function(s) {
+      totalSets++;
+      if (s.done) doneSets++;
+    });
+  });
+  document.getElementById('quickProgress').textContent = doneSets + '/' + totalSets;
+}
+
+function renderQuickExList() {
+  if (!quickSession) return;
+  var container = document.getElementById('quickExList');
+  if (quickSession.exercises.length === 0) {
+    container.innerHTML = '<div class="empty-hint">点击下方按钮添加训练动作</div>';
+    return;
+  }
+
+  container.innerHTML = quickSession.exercises.map(function(ex, ei) {
+    var allDone = ex.sets.length > 0 && ex.sets.every(function(s) { return s.done; });
+    var cardClass = allDone ? ' quick-ex-card done-all' : 'quick-ex-card';
+
+    var setsHtml = ex.sets.map(function(set, si) {
+      var tagClass = set.type === 'warmup' ? ' warmup' : set.type === 'dropset' ? ' dropset' : '';
+      var tagLabel = getSetLabel(ex.sets, si);
+      var cbClass = set.done ? ' done' : '';
+      var detail = (set.weight || set.reps) ? (set.weight || 0) + 'kg × ' + (set.reps || 0) + '次' : '点击编辑设置';
+      return '<div class="qe-set-row">' +
+        '<span class="qe-set-tag' + tagClass + '">' + escapeHtml(tagLabel) + '</span>' +
+        '<span class="qe-set-detail">' + detail + '</span>' +
+        '<span class="qe-cb' + cbClass + '" data-ei="' + ei + '" data-si="' + si + '">✓</span>' +
+        '</div>';
+    }).join('');
+
+    return '<div class="' + cardClass + '">' +
+      '<div class="qe-header">' +
+      '<span class="qe-name">' + escapeHtml(ex.name) + '</span>' +
+      '<div>' +
+      '<button class="edit-btn" data-ei="' + ei + '">✎</button>' +
+      '<button class="del-btn" data-ei="' + ei + '">×</button>' +
+      '</div></div>' +
+      setsHtml +
+      '</div>';
+  }).join('');
+
+  // 打勾
+  container.querySelectorAll('.qe-cb').forEach(function(cb) {
+    cb.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var ei = parseInt(cb.dataset.ei);
+      var si = parseInt(cb.dataset.si);
+      if (quickSession.exercises[ei] && quickSession.exercises[ei].sets[si]) {
+        quickSession.exercises[ei].sets[si].done = !quickSession.exercises[ei].sets[si].done;
+      }
+      updateQuickProgress();
+      renderQuickExList();
+    });
+  });
+
+  // 编辑
+  container.querySelectorAll('.edit-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var ei = parseInt(btn.dataset.ei);
+      var ex = quickSession.exercises[ei];
+      if (!ex) return;
+      quickOverlayMode = true;
+      quickSession._editingIndex = ei;
+
+      // 填充 overlay
+      var foundCat = null;
+      for (var c = 0; c < CATEGORY_KEYS.length; c++) {
+        if (CATEGORIES[CATEGORY_KEYS[c]].indexOf(ex.name) >= 0) {
+          foundCat = CATEGORY_KEYS[c];
+          break;
+        }
+      }
+      currentCategory = foundCat || '__custom__';
+      selectedExercise = foundCat ? ex.name : '';
+      editingId = null;
+      sheetTitle.textContent = '编辑动作';
+      submitBtn.textContent = '确认修改';
+      if (!foundCat) {
+        document.getElementById('exCustom').value = ex.name;
+      } else {
+        document.getElementById('exCustom').value = '';
+      }
+      currentSets = ex.sets.map(function(s) {
+        return { reps: s.reps, weight: s.weight, type: s.type, done: s.done };
+      });
+      closeKeyboard();
+      setSetCount(currentSets.length);
+      renderCatTabs();
+      renderExGrid();
+      overlay.classList.add('show');
+    });
+  });
+
+  // 删除
+  container.querySelectorAll('.del-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!confirm('删除这个动作？')) return;
+      quickSession.exercises.splice(parseInt(btn.dataset.ei), 1);
+      updateQuickProgress();
+      renderQuickExList();
+    });
+  });
+}
+
+// 快速训练 — 添加动作按钮
+document.getElementById('quickAddExBtn').addEventListener('click', function() {
+  quickOverlayMode = true;
+  quickSession._editingIndex = null;
+  editingId = null;
+  sheetTitle.textContent = '添加动作';
+  submitBtn.textContent = '添加到训练';
+  currentCategory = CATEGORY_KEYS[0];
+  selectedExercise = '';
+  document.getElementById('exCustom').value = '';
+  closeKeyboard();
+  currentSets = [];
+  setSetCount(3);
+  renderCatTabs();
+  renderExGrid();
+  overlay.classList.add('show');
+});
+
+// 拦截原 submit 按钮 — 如果是快速训练模式，加到 quickSession
+var origSubmitHandler = document.getElementById('submitAdd').onclick;
+document.getElementById('submitAdd').addEventListener('click', function(e) {
+  if (!quickOverlayMode) return; // 交给原来的处理
+  e.stopImmediatePropagation();
+
+  var name = document.getElementById('exCustom').value.trim() || selectedExercise;
+  if (!name) { alert('请选择或输入动作名称'); return; }
+
+  var sets = [];
+  currentSets.forEach(function(set) {
+    if ((set.reps > 0 || set.weight > 0) || set.done) {
+      sets.push({
+        reps: set.reps || 0,
+        weight: set.weight || 0,
+        type: set.type || 'normal',
+        done: set.done || false
+      });
+    }
+  });
+  if (sets.length === 0) { alert('请至少填写一组的次数或重量'); return; }
+
+  if (quickSession._editingIndex !== null && quickSession._editingIndex !== undefined) {
+    quickSession.exercises[quickSession._editingIndex] = { name: name, sets: sets };
+  } else {
+    quickSession.exercises.push({ name: name, sets: sets });
+  }
+
+  quickOverlayMode = false;
+  closeKeyboard();
+  overlay.classList.remove('show');
+  updateQuickProgress();
+  renderQuickExList();
+});
+
+// 快速训练 — 完成
+document.getElementById('quickFinishBtn').addEventListener('click', function() {
+  if (!quickSession || quickSession.exercises.length === 0) {
+    alert('还没有添加任何训练动作');
+    return;
+  }
+
+  var totalSets = 0;
+  var doneSets = 0;
+  quickSession.exercises.forEach(function(ex) {
+    ex.sets.forEach(function(s) {
+      totalSets++;
+      if (s.done) doneSets++;
+    });
+  });
+
+  if (!confirm('共 ' + quickSession.exercises.length + ' 个动作，完成 ' + doneSets + '/' + totalSets + ' 组。确定结束训练？')) return;
+
+  // 保存到日历
+  quickSession.exercises.forEach(function(ex) {
+    var volume = ex.sets.reduce(function(sum, s) { return sum + s.reps * s.weight; }, 0);
+    var entry = { id: genId(), name: ex.name, sets: ex.sets, volume: volume };
+    if (!data[selectedDate]) data[selectedDate] = [];
+    data[selectedDate].push(entry);
+  });
+  save();
+  renderAll();
+
+  quickSession = null;
+  stopTrainingTimer();
+  document.getElementById('quickTrainingView').style.display = 'none';
+  document.querySelector('.tab-item[data-tab="calendar"]').click();
+});
+
+// === 身体记录模块 ===
+
+var BODY_METRICS = [
+  { cat: 'weight', label: '体重', unit: 'kg', step: 0.1 },
+  { cat: 'bodyFat', label: '体脂率', unit: '%', step: 0.1 },
+  { cat: 'skeletalMuscle', label: '骨骼肌', unit: 'kg', step: 0.1 },
+  { cat: 'bmi', label: 'BMI', unit: '', step: 0.1 },
+  { cat: 'chest', label: '胸围', unit: 'cm', step: 0.5 },
+  { cat: 'waist', label: '腰围', unit: 'cm', step: 0.5 },
+  { cat: 'hip', label: '臀围', unit: 'cm', step: 0.5 },
+  { cat: 'thigh', label: '大腿围', unit: 'cm', step: 0.5 },
+  { cat: 'arm', label: '上臂围', unit: 'cm', step: 0.5 },
+  { cat: 'calf', label: '小腿围', unit: 'cm', step: 0.5 }
+];
+
+var METRIC_BY_CAT = {};
+BODY_METRICS.forEach(function(m) { METRIC_BY_CAT[m.cat] = m; });
+
+var bodyRecords = JSON.parse(localStorage.getItem('fitness_body_records')) || {};
+
+function saveBodyRecords() {
+  localStorage.setItem('fitness_body_records', JSON.stringify(bodyRecords));
+}
+
+function getBodyRecordsByCategory(cat) {
+  var result = [];
+  var dates = Object.keys(bodyRecords).sort(function(a, b) { return a.localeCompare(b); });
+  for (var d = 0; d < dates.length; d++) {
+    var entries = bodyRecords[dates[d]] || [];
+    for (var e = 0; e < entries.length; e++) {
+      if (entries[e].category === cat) {
+        result.push({ date: dates[d], entry: entries[e] });
+      }
+    }
+  }
+  return result;
+}
+
+function getLatestBodyRecord(cat) {
+  var records = getBodyRecordsByCategory(cat);
+  return records.length > 0 ? records[records.length - 1] : null;
+}
+
+// === 身体仪表盘 ===
+var bodyDetailCat = 'weight';
+var bodyQuickCat = 'weight';
+var bodyQuickValue = 0;
+var bodyQuickEditingId = null;
+var bodyQuickKbClearOnInput = false;
+
+function showBodyView() {
+  document.getElementById('bodyDashboard').style.display = 'block';
+  document.getElementById('bodyDetailView').style.display = 'none';
+  renderBodyDashboard();
+}
+
+function renderBodyDashboard() {
+  renderWeightCard();
+  renderSmallCards();
+}
+
+function renderWeightCard() {
+  var rec = getLatestBodyRecord('weight');
+  var card = document.getElementById('bodyCardWeight');
+  var valEl = card.querySelector('.bc-value');
+  var dateEl = document.getElementById('bodyWeightDate');
+  var deltaEl = document.getElementById('bodyWeightDelta');
+
+  if (rec) {
+    valEl.textContent = rec.entry.value;
+    dateEl.textContent = rec.date.slice(5);
+
+    // 计算较上次变化
+    var records = getBodyRecordsByCategory('weight');
+    if (records.length >= 2) {
+      var prev = records[records.length - 2].entry.value;
+      var diff = rec.entry.value - prev;
+      if (Math.abs(diff) < 0.05) {
+        deltaEl.textContent = '持平';
+        deltaEl.className = 'delta-flat';
+      } else if (diff < 0) {
+        deltaEl.textContent = '↓' + Math.abs(diff).toFixed(1);
+        deltaEl.className = 'delta-down';
+      } else {
+        deltaEl.textContent = '↑' + diff.toFixed(1);
+        deltaEl.className = 'delta-up';
+      }
+    } else {
+      deltaEl.textContent = '';
+    }
+  } else {
+    valEl.textContent = '--';
+    dateEl.textContent = '点击录入';
+    deltaEl.textContent = '';
+  }
+}
+
+function renderSmallCards() {
+  var grid = document.getElementById('bodyCardGrid');
+  var smMetrics = BODY_METRICS.filter(function(m) { return m.cat !== 'weight'; });
+
+  grid.innerHTML = smMetrics.map(function(m) {
+    var rec = getLatestBodyRecord(m.cat);
+    var val = rec ? rec.entry.value : '--';
+    var hasData = !!rec;
+    var dateStr = rec ? rec.date.slice(5) : '';
+
+    var deltaHtml = '';
+    if (hasData) {
+      var records = getBodyRecordsByCategory(m.cat);
+      if (records.length >= 2) {
+        var prev = records[records.length - 2].entry.value;
+        var diff = rec.entry.value - prev;
+        if (Math.abs(diff) < 0.05) {
+          deltaHtml = '<span class="bcs-delta delta-flat">持平</span>';
+        } else if (diff < 0) {
+          deltaHtml = '<span class="bcs-delta delta-down">↓' + Math.abs(diff).toFixed(1) + '</span>';
+        } else {
+          deltaHtml = '<span class="bcs-delta delta-up">↑' + diff.toFixed(1) + '</span>';
+        }
+      }
+    }
+
+    return '<div class="body-card-sm" data-cat="' + m.cat + '">' +
+      '<div class="bcs-label">' + m.label + '</div>' +
+      '<span class="bcs-value' + (hasData ? '' : ' bcs-empty') + '">' + val + '</span>' +
+      '<span class="bcs-unit">' + m.unit + '</span>' +
+      '<div class="bcs-sub">' +
+      (hasData ? '<span>' + dateStr + '</span>' + deltaHtml : '') +
+      '<span class="bcs-arrow">→</span>' +
+      '</div></div>';
+  }).join('');
+
+  // 点击卡片 → 快捷录入
+  grid.querySelectorAll('.body-card-sm').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+      // 如果点了箭头区域 → 看详情
+      if (e.target.closest('.bcs-arrow')) {
+        showBodyDetail(card.dataset.cat);
+        return;
+      }
+      openBodyQuickEntry(card.dataset.cat);
+    });
+  });
+}
+
+// 体重大卡片点击 → 快捷录入
+document.getElementById('bodyCardWeight').addEventListener('click', function(e) {
+  if (e.target.closest('.bc-arrow')) {
+    showBodyDetail('weight');
+    return;
+  }
+  openBodyQuickEntry('weight');
+});
+
+// === 快捷录入弹窗 ===
+function openBodyQuickEntry(cat) {
+  bodyQuickCat = cat;
+  bodyQuickEditingId = null;
+  bodyQuickValue = 0;
+  document.getElementById('bodyQuickDate').value = formatDate(new Date());
+  document.getElementById('bodyQuickNote').value = '';
+
+  var m = METRIC_BY_CAT[cat];
+  document.getElementById('bodyQuickTitle').textContent = '记录' + (m ? m.label : '');
+  document.getElementById('bodyQuickLabel').textContent = '数值 (' + (m ? m.unit : '') + ')';
+  document.getElementById('bodyQuickKbHint').textContent = '正在输入 (步长 ±' + (m ? m.step : 1) + ' ' + (m ? m.unit : '') + ')';
+  document.getElementById('bodyQuickValueCell').textContent = '0';
+
+  closeBodyQuickKeyboard();
+  document.getElementById('bodyQuickOverlay').classList.add('show');
+}
+
+document.getElementById('bodyQuickValueCell').addEventListener('click', function() {
+  openBodyQuickKeyboard();
+});
+
+function openBodyQuickKeyboard() {
+  var cell = document.getElementById('bodyQuickValueCell');
+  document.querySelectorAll('#bodyQuickOverlay .num-cell.active').forEach(function(c) { c.classList.remove('active'); });
+  cell.classList.add('active');
+
+  if (!bodyQuickKbClearOnInput) {
+    bodyQuickKbClearOnInput = !!(bodyQuickValue && bodyQuickValue !== 0);
+  }
+
+  var wrap = document.getElementById('bodyQuickKbWrap');
+  wrap.classList.add('show');
+  document.getElementById('bodyQuickOverlay').classList.add('keyboard-open');
+  syncKbDockHeight(wrap);
+  scrollKbTarget(cell);
+}
+
+function closeBodyQuickKeyboard() {
+  var wrap = document.getElementById('bodyQuickKbWrap');
+  wrap.classList.remove('show');
+  document.getElementById('bodyQuickOverlay').classList.remove('keyboard-open');
+  document.querySelectorAll('#bodyQuickOverlay .num-cell.active').forEach(function(c) { c.classList.remove('active'); });
+  bodyQuickKbClearOnInput = false;
+  clearKbDockHeight();
+}
+
+document.getElementById('bodyQuickKbGrid').addEventListener('click', function(e) {
+  var key = e.target.closest('.kb-key');
+  if (!key) return;
+  e.preventDefault();
+  var val = key.dataset.key;
+  var m = METRIC_BY_CAT[bodyQuickCat];
+  var step = m ? m.step : 0.1;
+  var cur = bodyQuickValue;
+
+  if (val === 'back') {
+    var str = String(cur);
+    cur = str.length > 1 ? parseFloat(str.slice(0, -1)) || 0 : 0;
+  } else if (val === 'dot') {
+    var str = String(cur);
+    if (str.indexOf('.') < 0) cur = str + '.';
+  } else if (val === 'plus') {
+    cur = roundVal(cur + step, 'weight');
+  } else if (val === 'minus') {
+    cur = roundVal(Math.max(0, cur - step), 'weight');
+  } else if (val === 'confirm') {
+    closeBodyQuickKeyboard();
+    return;
+  } else {
+    var str = String(cur);
+    if (bodyQuickKbClearOnInput) { str = ''; bodyQuickKbClearOnInput = false; }
+    if (str === '0' && val !== '0') str = '';
+    if (str === '' && val === '0') str = '0';
+    else str = str + val;
+    cur = parseFloat(str) || 0;
+  }
+
+  bodyQuickValue = roundVal(cur, 'weight');
+  document.getElementById('bodyQuickValueCell').textContent = bodyQuickValue || '0';
+});
+
+document.getElementById('bodyQuickKbWrap').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+document.getElementById('bodyQuickCancel').addEventListener('click', function() {
+  closeBodyQuickKeyboard();
+  document.getElementById('bodyQuickOverlay').classList.remove('show');
+});
+
+document.getElementById('bodyQuickOverlay').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeBodyQuickKeyboard();
+    this.classList.remove('show');
+  }
+});
+
+document.getElementById('bodyQuickSubmit').addEventListener('click', function() {
+  var date = document.getElementById('bodyQuickDate').value;
+  if (!date) { alert('请选择日期'); return; }
+
+  var m = METRIC_BY_CAT[bodyQuickCat];
+  var entry = {
+    id: bodyQuickEditingId || genId(),
+    category: bodyQuickCat,
+    value: bodyQuickValue,
+    unit: m ? m.unit : '',
+    note: document.getElementById('bodyQuickNote').value.trim()
+  };
+
+  if (!bodyRecords[date]) bodyRecords[date] = [];
+
+  if (bodyQuickEditingId) {
+    var idx = bodyRecords[date].findIndex(function(r) { return r.id === bodyQuickEditingId; });
+    if (idx >= 0) bodyRecords[date][idx] = entry;
+    else bodyRecords[date].push(entry);
+  } else {
+    bodyRecords[date].push(entry);
+  }
+
+  saveBodyRecords();
+  closeBodyQuickKeyboard();
+  document.getElementById('bodyQuickOverlay').classList.remove('show');
+
+  // 如果在详情页则刷新详情页，否则刷新仪表盘
+  if (document.getElementById('bodyDetailView').style.display !== 'none') {
+    showBodyDetail(bodyDetailCat);
+  } else {
+    showBodyView();
+  }
+});
+
+// === 自定义记录按钮 ===
+document.getElementById('bodyAddCustomBtn').addEventListener('click', function() {
+  // 打开一个通用录入弹窗，允许用户选择任意指标
+  openBodyQuickEntry('weight');
+  // 对于自定义，用户可以在弹窗里改日期和备注
+});
+
+// === 指标详情页 ===
+function showBodyDetail(cat) {
+  bodyDetailCat = cat;
+  var m = METRIC_BY_CAT[cat];
+  document.getElementById('bodyDashboard').style.display = 'none';
+  document.getElementById('bodyDetailView').style.display = 'block';
+  document.getElementById('bodyDetailTitle').textContent = m ? m.label : '';
+  renderBodyDetailChart();
+  renderBodyDetailList();
+}
+
+document.getElementById('bodyDetailBack').addEventListener('click', function() {
+  document.getElementById('bodyDetailView').style.display = 'none';
+  document.getElementById('bodyDashboard').style.display = 'block';
+  renderBodyDashboard();
+});
+
+document.getElementById('bodyDetailQuickAdd').addEventListener('click', function() {
+  openBodyQuickEntry(bodyDetailCat);
+});
+
+function renderBodyDetailChart() {
+  var canvas = document.getElementById('bodyDetailChart');
+  if (!canvas) return;
+  var records = getBodyRecordsByCategory(bodyDetailCat);
+  if (records.length < 2) {
+    canvas.style.display = 'none';
+    return;
+  }
+  canvas.style.display = 'block';
+
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  var cssW = rect.width - 32;
+  var cssH = 180;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  var margin = { top: 20, right: 16, bottom: 30, left: 40 };
+  var w = cssW - margin.left - margin.right;
+  var h = cssH - margin.top - margin.bottom;
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  var values = records.map(function(r) { return r.entry.value; });
+  var minVal = Math.min.apply(null, values);
+  var maxVal = Math.max.apply(null, values);
+  var range = maxVal - minVal || 1;
+  minVal = minVal - range * 0.1;
+  maxVal = maxVal + range * 0.1;
+  range = maxVal - minVal;
+
+  var xStep = w / Math.max(records.length - 1, 1);
+  var points = records.map(function(r, i) {
+    return {
+      x: margin.left + i * xStep,
+      y: margin.top + h - ((r.entry.value - minVal) / range) * h,
+      value: r.entry.value,
+      date: r.date
+    };
+  });
+
+  ctx.strokeStyle = '#f3f4f6';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.textAlign = 'right';
+  for (var g = 0; g <= 4; g++) {
+    var gy = margin.top + (h / 4) * g;
+    var gval = maxVal - (range / 4) * g;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, gy);
+    ctx.lineTo(margin.left + w, gy);
+    ctx.stroke();
+    ctx.fillText(gval.toFixed(1), margin.left - 6, gy + 3);
+  }
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#9ca3af';
+  var showDates = records.length <= 7 ? records.length : Math.ceil(records.length / 6);
+  for (var i = 0; i < records.length; i++) {
+    if (i % Math.max(1, showDates) === 0 || i === records.length - 1) {
+      ctx.fillText(records[i].date.slice(5), margin.left + i * xStep, margin.top + h + 16);
+    }
+  }
+
+  ctx.strokeStyle = '#4f46e5';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach(function(p, i) {
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.stroke();
+
+  points.forEach(function(p) {
+    ctx.fillStyle = '#4f46e5';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '700 11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.value.toFixed(1), p.x, p.y - 10);
+  });
+}
+
+function renderBodyDetailList() {
+  var container = document.getElementById('bodyDetailList');
+  var records = getBodyRecordsByCategory(bodyDetailCat);
+  var m = METRIC_BY_CAT[bodyDetailCat];
+
+  if (records.length === 0) {
+    container.innerHTML = '<div class="empty-hint">暂无' + (m ? m.label : '') + '记录</div>';
+    return;
+  }
+
+  var html = '';
+  var currentDate = '';
+  for (var i = records.length - 1; i >= 0; i--) {
+    var r = records[i];
+    if (r.date !== currentDate) {
+      currentDate = r.date;
+      html += '<div class="date-group-header">' + currentDate + '</div>';
+    }
+    html += '<div class="body-history-card">' +
+      '<div class="bh-value">' + r.entry.value + '<span class="bh-unit">' + (m ? m.unit : '') + '</span></div>' +
+      (r.entry.note ? '<div class="bh-note">' + escapeHtml(r.entry.note) + '</div>' : '<div class="bh-note"></div>') +
+      '<button class="edit-btn" data-id="' + r.entry.id + '" data-date="' + r.date + '">✎</button>' +
+      '<button class="del-btn" data-id="' + r.entry.id + '" data-date="' + r.date + '">×</button>' +
+      '</div>';
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.edit-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var id = btn.dataset.id;
+      var date = btn.dataset.date;
+      var entries = bodyRecords[date] || [];
+      var entry = entries.find(function(r) { return r.id === id; });
+      if (!entry) return;
+      bodyQuickCat = entry.category;
+      bodyQuickEditingId = id;
+      bodyQuickValue = entry.value;
+      document.getElementById('bodyQuickDate').value = date;
+      document.getElementById('bodyQuickNote').value = entry.note || '';
+      var m2 = METRIC_BY_CAT[bodyQuickCat];
+      document.getElementById('bodyQuickTitle').textContent = '编辑' + (m2 ? m2.label : '');
+      document.getElementById('bodyQuickLabel').textContent = '数值 (' + (m2 ? m2.unit : '') + ')';
+      document.getElementById('bodyQuickValueCell').textContent = bodyQuickValue || '0';
+      closeBodyQuickKeyboard();
+      document.getElementById('bodyQuickOverlay').classList.add('show');
+    });
+  });
+
+  container.querySelectorAll('.del-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!confirm('删除这条记录？')) return;
+      var date = btn.dataset.date;
+      var id = btn.dataset.id;
+      bodyRecords[date] = (bodyRecords[date] || []).filter(function(r) { return r.id !== id; });
+      if (bodyRecords[date].length === 0) delete bodyRecords[date];
+      saveBodyRecords();
+      showBodyDetail(bodyDetailCat);
     });
   });
 }
